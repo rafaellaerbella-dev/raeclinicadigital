@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Prescrição (Memed)</title>
+
   <style>
     body { font-family: Arial, sans-serif; margin: 16px; }
+    #app { display:none; }
     #loading { padding: 12px; color: #555; }
     #error {
       display:none; padding:12px; border-radius:6px;
@@ -13,11 +15,30 @@
       white-space: pre-wrap;
     }
   </style>
+
+  <script>
+    // ✅ Protege a página
+    (async () => {
+      try {
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
+        const j = await r.json().catch(() => ({}));
+        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
+        document.addEventListener("DOMContentLoaded", () => {
+          document.getElementById("app").style.display = "block";
+        });
+      } catch {
+        window.location.href = "/auth/login.html";
+      }
+    })();
+  </script>
 </head>
+
 <body>
-  <a href="/index.html">← Voltar</a>
-  <div id="loading">Carregando prescrição Memed…</div>
-  <div id="error"></div>
+  <div id="app">
+    <a href="/index.html">← Voltar</a>
+    <div id="loading">Carregando prescrição Memed…</div>
+    <div id="error"></div>
+  </div>
 
   <script>
     const WORKER = "https://api.raeclinicadigital.com/api/token";
@@ -33,7 +54,9 @@
     }
 
     async function getToken(prescritorId){
-      const r = await fetch(`${WORKER}?prescritorId=${encodeURIComponent(prescritorId)}`);
+      const r = await fetch(`${WORKER}?prescritorId=${encodeURIComponent(prescritorId)}`, {
+        credentials: "include"
+      });
       const j = await r.json().catch(() => ({}));
 
       if (r.status === 503 && j.error === "memed_unavailable") {
@@ -64,7 +87,7 @@
         MdSinapsePrescricao.event.add("core:moduleInit", async (module) => {
           if (module.name !== "plataforma.prescricao") return;
 
-          // setPaciente por querystring (opcional)
+          // setPaciente opcional por querystring
           const paciente = {};
           const nome = qs("nome");
           const telefone = qs("telefone");
