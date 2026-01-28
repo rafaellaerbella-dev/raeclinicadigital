@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prescrição (Memed)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 16px; }
+    #loading { padding: 12px; color: #555; }
+    #error {
+      display:none; padding:12px; border-radius:6px;
+      background:#ffebee; border:1px solid #ef5350; color:#c62828;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <a href="/index.html">← Voltar</a>
+  <div id="loading">Carregando prescrição Memed…</div>
+  <div id="error"></div>
+
+  <script>
+    const WORKER = "https://api.raeclinicadigital.com/api/token";
+    const MEMED_SCRIPT = "https://integrations.memed.com.br/modulos/plataforma.sinapse-prescricao/build/sinapse-prescricao.min.js";
+
+    function qs(k){ return new URLSearchParams(location.search).get(k); }
+
+    function showError(msg){
+      document.getElementById("loading").style.display="none";
+      const e = document.getElementById("error");
+      e.style.display="block";
+      e.textContent = msg;
+    }
+
+    async function getToken(prescritorId){
+      const r = await fetch(`${WORKER}?prescritorId=${encodeURIComponent(prescritorId)}`);
+      const j = await r.json().catch(() => ({}));
+
+      if (r.status === 503 && j.error === "memed_unavailable") {
+        throw new Error("Memed indisponível no momento. Tente novamente mais tarde.");
+      }
+      if (!r.ok) {
+        throw new Error(`Erro ao obter token (HTTP ${r.status}): ${JSON.stringify(j)}`);
+      }
+      if (!j.token) {
+        throw new Error("Backend não retornou token.");
+      }
+      return j.token;
+    }
+
+    async function main(){
+      const prescritorId = qs("prescritorId");
+      if (!prescritorId) return showError("Falta ?prescritorId=<external_id>");
+
+      let token;
+      try { token = await getToken(prescritorId); }
+      catch (e) { return showError(e.message || String(e)); }
+
+      const s = document.createElement("script");
+      s.src = MEMED_SCRIPT;
+      s.dataset.token = token;
+
+      s.onload = () => {
+        MdSinapsePrescricao.event.add("core:moduleInit", async (module) => {
+          if (module.name !== "plataforma.prescricao") return;
+
+          // setPaciente por querystring (opcional)
+          const paciente = {};
+          const nome = qs("nome");
+          const telefone = qs("telefone");
+          if (nome) paciente.nome = nome;
+          if (telefone) paciente.telefone = telefone;
+          const cpf = qs("cpf"); if (cpf) paciente.cpf = cpf;
+          const nasc = qs("nascimento"); if (nasc) paciente.data_nascimento = nasc;
+          const idExt = qs("pacienteId"); if (idExt) paciente.idExterno = String(idExt);
+
+          if (Object.keys(paciente).length) {
+            try { await MdHub.command.send("plataforma.prescricao", "setPaciente", paciente); }
+            catch (e) { console.warn("Falha setPaciente:", e); }
+          }
+
+          document.getElementById("loading").style.display="none";
+          MdHub.module.show("plataforma.prescricao");
+        });
+      };
+
+      s.onerror = () => showError("Erro ao carregar script da Memed.");
+      document.body.appendChild(s);
+    }
+
+    main();
+  </script>
+</body>
+</html>
