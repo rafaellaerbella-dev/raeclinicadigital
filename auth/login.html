@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login • Rae Clínica Digital</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 420px; }
+    label { display:block; margin-top: 12px; }
+    input { width: 100%; padding: 10px; margin-top: 6px; }
+    button { margin-top: 16px; padding: 10px 14px; cursor: pointer; width: 100%; }
+    #error { margin-top: 12px; color: #c62828; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Entrar</h2>
+
+  <form id="loginForm">
+    <label>Usuário</label>
+    <input id="username" autocomplete="username" required />
+
+    <label>Senha</label>
+    <input id="password" type="password" autocomplete="current-password" required />
+
+    <button type="submit">Entrar</button>
+  </form>
+
+  <div id="error"></div>
+
+  <script>
+    const API_BASE = "https://api.raeclinicadigital.com";
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      document.getElementById("error").textContent = "";
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      const res = await fetch(API_BASE + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        document.getElementById("error").textContent =
+          "Login inválido. Verifique usuário/senha.";
+        return;
+      }
+
+      // Login ok → volta para a home
+      window.location.href = "/index.html";
+    });
+  </script>
+</body>
+</html>
