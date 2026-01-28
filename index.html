@@ -4,31 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rae Clínica Digital</title>
+
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; }
     a { display: inline-block; margin: 8px 0; }
     .card { border: 1px solid #eee; padding: 16px; border-radius: 8px; max-width: 720px; }
-    #app { display:none; } /* esconde até validar sessão */
+    #app { display:none; }
   </style>
 
   <script>
-    // ✅ Proteção da página (login obrigatório)
     (async () => {
       try {
-        const r = await fetch("https://api.raeclinicadigital.com/auth/me", {
-          credentials: "include"
-        });
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
         const j = await r.json().catch(() => ({}));
-        if (!j.ok) {
-          window.location.href = "/auth/login.html";
-          return;
-        }
-        // logado → libera conteúdo
+        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
         document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("app").style.display = "block";
         });
-      } catch (e) {
-        // se a API estiver fora do ar, manda pro login (ou você pode mostrar erro)
+      } catch {
         window.location.href = "/auth/login.html";
       }
     })();
@@ -55,7 +48,6 @@
   </div>
 
   <script>
-    // Logout (opcional, mas útil)
     document.getElementById("logout")?.addEventListener("click", async () => {
       await fetch("https://api.raeclinicadigital.com/auth/logout", {
         method: "POST",
