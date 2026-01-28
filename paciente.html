@@ -4,44 +4,64 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Paciente</title>
+
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; }
     .card { border: 1px solid #eee; padding: 16px; border-radius: 8px; max-width: 720px; }
     label { display:block; margin-top: 10px; }
     input { width: 100%; padding: 8px; margin-top: 4px; }
     button { margin-top: 14px; padding: 10px 14px; cursor: pointer; }
+    #app { display:none; }
     small { color: #666; }
   </style>
+
+  <script>
+    (async () => {
+      try {
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
+        const j = await r.json().catch(() => ({}));
+        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
+        document.addEventListener("DOMContentLoaded", () => {
+          document.getElementById("app").style.display = "block";
+        });
+      } catch {
+        window.location.href = "/auth/login.html";
+      }
+    })();
+  </script>
 </head>
+
 <body>
-  <a href="/index.html">← Voltar</a>
-  <h1>Ficha do paciente</h1>
+  <div id="app">
+    <a href="/index.html">← Voltar</a>
+    <h1>Ficha do paciente</h1>
 
-  <div class="card">
-    <p><small>Placeholder: aqui você vai evoluir para buscar dados do seu backend.</small></p>
+    <div class="card">
+      <p><small>Placeholder: por enquanto, manual. Depois você pode buscar do seu backend.</small></p>
 
-    <label>Nome</label>
-    <input id="nome" value="Paciente Teste" />
+      <label>Nome</label>
+      <input id="nome" value="Paciente Teste" />
 
-    <label>Telefone</label>
-    <input id="telefone" value="11999999999" />
+      <label>Telefone</label>
+      <input id="telefone" value="11999999999" />
 
-    <label>CPF</label>
-    <input id="cpf" value="12345678900" />
+      <label>CPF</label>
+      <input id="cpf" value="12345678900" />
 
-    <label>Nascimento (dd/mm/aaaa)</label>
-    <input id="nascimento" value="01/01/1990" />
+      <label>Nascimento (dd/mm/aaaa)</label>
+      <input id="nascimento" value="01/01/1990" />
 
-    <label>ID do paciente (interno)</label>
-    <input id="pacienteId" value="demo-001" />
+      <label>ID do paciente (interno)</label>
+      <input id="pacienteId" value="demo-001" />
 
-    <button id="btnPrescrever">💊 Prescrever (Memed)</button>
+      <button id="btnPrescrever">💊 Prescrever (Memed)</button>
+    </div>
   </div>
 
   <script>
     const PRESCRITOR_ID = "30011eb5-00e8-4cb0-8c3a-f9ee64567dfd";
 
-    document.getElementById("btnPrescrever").addEventListener("click", () => {
+    document.getElementById("btnPrescrever")?.addEventListener("click", () => {
       const nome = encodeURIComponent(document.getElementById("nome").value.trim());
       const telefone = encodeURIComponent(document.getElementById("telefone").value.trim());
       const cpf = encodeURIComponent(document.getElementById("cpf").value.trim());
