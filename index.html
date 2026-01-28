@@ -12,15 +12,28 @@
     #app { display:none; }
   </style>
 
-  <script>
+ <script>
     (async () => {
       try {
-        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
-        const j = await r.json().catch(() => ({}));
-        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
-        document.addEventListener("DOMContentLoaded", () => {
-          document.getElementById("app").style.display = "block";
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", {
+          credentials: "include"
         });
+        const j = await r.json().catch(() => ({}));
+        if (!j.ok) {
+          window.location.href = "/auth/login.html";
+          return;
+        }
+  
+        const showApp = () => {
+          const el = document.getElementById("app");
+          if (el) el.style.display = "block";
+        };
+  
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", showApp);
+        } else {
+          showApp();
+        }
       } catch {
         window.location.href = "/auth/login.html";
       }
