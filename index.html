@@ -8,17 +8,61 @@
     body { font-family: Arial, sans-serif; margin: 24px; }
     a { display: inline-block; margin: 8px 0; }
     .card { border: 1px solid #eee; padding: 16px; border-radius: 8px; max-width: 720px; }
+    #app { display:none; } /* esconde até validar sessão */
   </style>
+
+  <script>
+    // ✅ Proteção da página (login obrigatório)
+    (async () => {
+      try {
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", {
+          credentials: "include"
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!j.ok) {
+          window.location.href = "/auth/login.html";
+          return;
+        }
+        // logado → libera conteúdo
+        document.addEventListener("DOMContentLoaded", () => {
+          document.getElementById("app").style.display = "block";
+        });
+      } catch (e) {
+        // se a API estiver fora do ar, manda pro login (ou você pode mostrar erro)
+        window.location.href = "/auth/login.html";
+      }
+    })();
+  </script>
 </head>
+
 <body>
-  <h1>Rae Clínica Digital</h1>
+  <div id="app">
+    <h1>Rae Clínica Digital</h1>
 
-  <div class="card">
-    <p>Este é o seu prontuário pessoal (versão mínima).</p>
+    <div class="card">
+      <p>Este é o seu prontuário pessoal (versão mínima).</p>
 
-    <h3>Navegação</h3>
-    <a href="/paciente.html?id=demo">📄 Abrir ficha do paciente (demo)</a><br/>
-    <a href="/prescricao.html?prescritorId=30011eb5-00e8-4cb0-8c3a-f9ee64567dfd">💊 Abrir Memed (sem paciente)</a>
+      <h3>Navegação</h3>
+      <a href="/paciente.html?id=demo">📄 Abrir ficha do paciente (demo)</a><br/>
+      <a href="/prescricao.html?prescritorId=30011eb5-00e8-4cb0-8c3a-f9ee64567dfd">💊 Abrir Memed (sem paciente)</a>
+
+      <hr/>
+
+      <button id="logout" style="margin-top:12px; padding:8px 12px; cursor:pointer;">
+        Sair
+      </button>
+    </div>
   </div>
+
+  <script>
+    // Logout (opcional, mas útil)
+    document.getElementById("logout")?.addEventListener("click", async () => {
+      await fetch("https://api.raeclinicadigital.com/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      window.location.href = "/auth/login.html";
+    });
+  </script>
 </body>
 </html>
