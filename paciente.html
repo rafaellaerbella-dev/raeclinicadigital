@@ -184,158 +184,158 @@
         console.warn("btnNovaEvolucao não encontrado no DOM");
       }
       
-    <script>
-        const EVOL_KEY = "rae_evolucoes_v1";
-      
-        function loadEvolMap() {
-          try {
-            return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}");
-          } catch {
-            return {};
-          }
-        }
-      
-        function saveEvolMap(map) {
-          localStorage.setItem(EVOL_KEY, JSON.stringify(map));
-        }
-      
-        function escapeHtml(s) {
-          return (s || "").replace(/[&<>"']/g, (c) => ({
-            "&":"&amp;",
-            "<":"&lt;",
-            ">":"&gt;",
-            '"':"&quot;",
-            "'":"&#039;"
-          }[c]));
-        }
-      
-        function formatDateBR(iso) {
-          try {
-            return new Date(iso).toLocaleDateString("pt-BR");
-          } catch {
-            return "";
-          }
-        }
-      
-        function renderEvolucoes(pacienteId) {
-          const map = loadEvolMap();
-          const evols = (map[pacienteId] || []).slice();
-      
-          evols.sort((a, b) => {
-            const aa = a.updatedAt || a.registeredAt || "";
-            const bb = b.updatedAt || b.registeredAt || "";
-            return bb.localeCompare(aa);
-          });
-      
-          const list = document.getElementById("evolList");
-          const empty = document.getElementById("evolEmpty");
-      
-          list.innerHTML = "";
-          empty.style.display = evols.length ? "none" : "block";
-      
-          evols.forEach(ev => {
-            const isSigned = !!ev.signedAt;
-            const isInactive = !!ev.inactiveAt;
-      
-            const evolucaoEm = ev.evolutionDate
-              ? `Evolução em ${escapeHtml(ev.evolutionDate)}`
-              : "Evolução (mesmo dia do registro)";
-      
-            const registradaEm = ev.registeredAt
-              ? `Registrada em ${formatDateBR(ev.registeredAt)}`
-              : "";
-      
-            const statusExtra = isInactive
-              ? `<span class="label" style="color:#c62828;">• INATIVA</span>`
-              : isSigned
-                ? `<span class="label" style="color:#2e7d32;">• ASSINADA</span>`
-                : "";
-      
-            const preview = escapeHtml(ev.texto || "")
-              .slice(0, 180) + ((ev.texto || "").length > 180 ? "…" : "");
-      
-            const buttons = isSigned
-              ? `
-                <button data-open-evol="${ev.id}">Abrir</button>
-                ${isInactive ? "" : `<button data-inactivate-evol="${ev.id}">Inativar</button>`}
-              `
-              : `
-                <button data-open-evol="${ev.id}">Abrir</button>
-                <button data-edit-evol="${ev.id}">Editar</button>
-                <button data-del-evol="${ev.id}">Excluir</button>
-              `;
-      
-            const div = document.createElement("div");
-            div.style.borderTop = "1px solid #eee";
-            div.style.padding = "12px 0";
-      
-            div.innerHTML = `
-              <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
-                <div style="flex:1;">
-                  ${ev.titulo ? `<div style="font-weight:600;">${escapeHtml(ev.titulo)}</div>` : ""}
-                  <div class="label">
-                    ${evolucaoEm} • ${registradaEm} ${statusExtra}
-                  </div>
-                  <div style="margin-top:6px;">${preview}</div>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                  ${buttons}
-                </div>
+  <script>
+    const EVOL_KEY = "rae_evolucoes_v1";
+  
+    function loadEvolMap() {
+      try {
+        return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}");
+      } catch {
+        return {};
+      }
+    }
+  
+    function saveEvolMap(map) {
+      localStorage.setItem(EVOL_KEY, JSON.stringify(map));
+    }
+  
+    function escapeHtml(s) {
+      return (s || "").replace(/[&<>"']/g, (c) => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+      }[c]));
+    }
+  
+    function formatDateBR(iso) {
+      try {
+        return new Date(iso).toLocaleDateString("pt-BR");
+      } catch {
+        return "";
+      }
+    }
+  
+    function renderEvolucoes(pacienteId) {
+      const map = loadEvolMap();
+      const evols = (map[pacienteId] || []).slice();
+  
+      evols.sort((a, b) => {
+        const aa = a.updatedAt || a.registeredAt || "";
+        const bb = b.updatedAt || b.registeredAt || "";
+        return bb.localeCompare(aa);
+      });
+  
+      const list = document.getElementById("evolList");
+      const empty = document.getElementById("evolEmpty");
+  
+      list.innerHTML = "";
+      empty.style.display = evols.length ? "none" : "block";
+  
+      evols.forEach(ev => {
+        const isSigned = !!ev.signedAt;
+        const isInactive = !!ev.inactiveAt;
+  
+        const evolucaoEm = ev.evolutionDate
+          ? `Evolução em ${escapeHtml(ev.evolutionDate)}`
+          : "Evolução (mesmo dia do registro)";
+  
+        const registradaEm = ev.registeredAt
+          ? `Registrada em ${formatDateBR(ev.registeredAt)}`
+          : "";
+  
+        const statusExtra = isInactive
+          ? `<span class="label" style="color:#c62828;">• INATIVA</span>`
+          : isSigned
+            ? `<span class="label" style="color:#2e7d32;">• ASSINADA</span>`
+            : "";
+  
+        const preview = escapeHtml(ev.texto || "")
+          .slice(0, 180) + ((ev.texto || "").length > 180 ? "…" : "");
+  
+        const buttons = isSigned
+          ? `
+            <button data-open-evol="${ev.id}">Abrir</button>
+            ${isInactive ? "" : `<button data-inactivate-evol="${ev.id}">Inativar</button>`}
+          `
+          : `
+            <button data-open-evol="${ev.id}">Abrir</button>
+            <button data-edit-evol="${ev.id}">Editar</button>
+            <button data-del-evol="${ev.id}">Excluir</button>
+          `;
+  
+        const div = document.createElement("div");
+        div.style.borderTop = "1px solid #eee";
+        div.style.padding = "12px 0";
+  
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+            <div style="flex:1;">
+              ${ev.titulo ? `<div style="font-weight:600;">${escapeHtml(ev.titulo)}</div>` : ""}
+              <div class="label">
+                ${evolucaoEm} • ${registradaEm} ${statusExtra}
               </div>
-            `;
-      
-            list.appendChild(div);
-          });
-        }
-      
-        document.getElementById("btnNovaEvolucao")?.addEventListener("click", () => {
-          window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}`;
-        });
-      
-        document.getElementById("evolList")?.addEventListener("click", (e) => {
-          const openId = e.target?.getAttribute?.("data-open-evol");
-          const editId = e.target?.getAttribute?.("data-edit-evol");
-          const delId = e.target?.getAttribute?.("data-del-evol");
-          const inactivateId = e.target?.getAttribute?.("data-inactivate-evol");
-      
-          if (openId) {
-            window.location.href =
-              `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}&id=${encodeURIComponent(openId)}&mode=view`;
-            return;
-          }
-      
-          if (editId) {
-            window.location.href =
-              `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}&id=${encodeURIComponent(editId)}`;
-            return;
-          }
-      
-          if (delId) {
-            const ok = confirm("Excluir esta evolução? Esta ação não pode ser desfeita.");
-            if (!ok) return;
-      
-            const map = loadEvolMap();
-            map[id] = (map[id] || []).filter(ev => ev.id !== delId);
-            saveEvolMap(map);
-            renderEvolucoes(id);
-            return;
-          }
-      
-          if (inactivateId) {
-            const ok = confirm("Inativar esta evolução assinada?");
-            if (!ok) return;
-      
-            const map = loadEvolMap();
-            const ev = (map[id] || []).find(e => e.id === inactivateId);
-            if (ev && !ev.inactiveAt) {
-              ev.inactiveAt = new Date().toISOString();
-              saveEvolMap(map);
-              renderEvolucoes(id);
-            }
-          }
-        });
-      
+              <div style="margin-top:6px;">${preview}</div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              ${buttons}
+            </div>
+          </div>
+        `;
+  
+        list.appendChild(div);
+      });
+    }
+  
+    document.getElementById("btnNovaEvolucao")?.addEventListener("click", () => {
+      window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}`;
+    });
+  
+    document.getElementById("evolList")?.addEventListener("click", (e) => {
+      const openId = e.target?.getAttribute?.("data-open-evol");
+      const editId = e.target?.getAttribute?.("data-edit-evol");
+      const delId = e.target?.getAttribute?.("data-del-evol");
+      const inactivateId = e.target?.getAttribute?.("data-inactivate-evol");
+  
+      if (openId) {
+        window.location.href =
+          `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}&id=${encodeURIComponent(openId)}&mode=view`;
+        return;
+      }
+  
+      if (editId) {
+        window.location.href =
+          `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}&id=${encodeURIComponent(editId)}`;
+        return;
+      }
+  
+      if (delId) {
+        const ok = confirm("Excluir esta evolução? Esta ação não pode ser desfeita.");
+        if (!ok) return;
+  
+        const map = loadEvolMap();
+        map[id] = (map[id] || []).filter(ev => ev.id !== delId);
+        saveEvolMap(map);
         renderEvolucoes(id);
-      </script>
+        return;
+      }
+  
+      if (inactivateId) {
+        const ok = confirm("Inativar esta evolução assinada?");
+        if (!ok) return;
+  
+        const map = loadEvolMap();
+        const ev = (map[id] || []).find(e => e.id === inactivateId);
+        if (ev && !ev.inactiveAt) {
+          ev.inactiveAt = new Date().toISOString();
+          saveEvolMap(map);
+          renderEvolucoes(id);
+        }
+      }
+    });
+  
+    renderEvolucoes(id);
+  </script>
 </body>
 </html>
