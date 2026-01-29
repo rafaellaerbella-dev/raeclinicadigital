@@ -108,15 +108,15 @@
 </head>
 
 <body>
-  <div id="app">
+  <div id="app" style="display:none;">
     <a id="backLink">← Voltar para o paciente</a>
 
     <h1 id="title">Evolução</h1>
 
-    <!-- VIEW MODE (leitura) -->
+    <!-- ===== VIEW MODE ===== -->
     <div id="viewMode" style="display:none;">
-      <div id="viewStatus" class="label" style="display:none;"></div>
       <div id="viewDate" class="muted"></div>
+      <div id="viewStatus" class="muted" style="display:none;"></div>
       <div id="viewRegistered" class="muted" style="margin-top:6px;"></div>
 
       <div id="viewConsultTitle" style="margin-top:14px; font-weight:600;"></div>
@@ -126,7 +126,7 @@
       </div>
     </div>
 
-    <!-- EDIT MODE (formulário) -->
+    <!-- ===== EDIT MODE ===== -->
     <div class="card" id="editCard">
       <label for="dataEvolucao">Data da evolução (dd/mm/aaaa)</label>
       <input id="dataEvolucao" placeholder="29/01/2026" />
@@ -149,91 +149,89 @@
 
     <div id="error"></div>
   </div>
-
-  <!-- SCRIPT aqui embaixo -->
 </body>
 
   <script>
+    /* ===============================
+       CONFIG / HELPERS
+    ================================ */
     const EVOL_KEY = "rae_evolucoes_v1";
-  
     const qs = (k) => new URLSearchParams(location.search).get(k);
-  
+    
     function loadMap() {
       try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); }
       catch { return {}; }
     }
-  
+    
     function saveMap(map) {
       localStorage.setItem(EVOL_KEY, JSON.stringify(map));
     }
-  
+    
+    function isoToBRDate(iso) {
+      try { return new Date(iso).toLocaleDateString("pt-BR"); }
+      catch { return ""; }
+    }
+    
     function showError(msg) {
       const e = document.getElementById("error");
       e.style.display = "block";
       e.textContent = msg;
     }
-  
-    function isoToBRDate(iso) {
-      try { return new Date(iso).toLocaleDateString("pt-BR"); } catch { return ""; }
-    }
-  
-    // ---------- params ----------
+    
+    /* ===============================
+       PARAMS
+    ================================ */
     const pacienteId = qs("pacienteId");
     const evolucaoId = qs("id");
     const isViewMode = qs("mode") === "view";
-  
-    // ---------- elements ----------
+    
+    /* ===============================
+       ELEMENTS
+    ================================ */
     const backLink = document.getElementById("backLink");
     const titleEl = document.getElementById("title");
-    const errorEl = document.getElementById("error");
-  
+    
     const viewModeEl = document.getElementById("viewMode");
     const viewDateEl = document.getElementById("viewDate");
+    const viewStatusEl = document.getElementById("viewStatus");
     const viewRegisteredEl = document.getElementById("viewRegistered");
     const viewConsultTitleEl = document.getElementById("viewConsultTitle");
     const viewTextEl = document.getElementById("viewText");
-  
+    
     const editCardEl = document.getElementById("editCard");
-    const dataEl = document.getElementById("dataEvolucao"); // opcional
+    const dataEl = document.getElementById("dataEvolucao");
     const tituloEl = document.getElementById("titulo");
     const textoEl = document.getElementById("texto");
     const infoEl = document.getElementById("info");
     const signedInfoEl = document.getElementById("signedInfo");
     const saveBtn = document.getElementById("saveBtn");
     const signBtn = document.getElementById("signBtn");
-  
-    // validações mínimas
-    const required = [backLink, titleEl, viewModeEl, viewDateEl, viewRegisteredEl, viewConsultTitleEl, viewTextEl, editCardEl, dataEl, tituloEl, textoEl, infoEl, signedInfoEl, saveBtn, signBtn, errorEl];
-    if (required.some(x => !x)) {
-      // Se quebrar aqui, significa que algum id do HTML está diferente
-      alert("Erro: IDs do HTML não batem com o script (verifique viewMode/editCard e campos).");
-    }
-  
-    // back link
-    if (backLink) {
-      backLink.href = pacienteId
-        ? `/paciente.html?id=${encodeURIComponent(pacienteId)}`
-        : "/pacientes.html";
-    }
-  
+    
+    /* ===============================
+       BASIC VALIDATION
+    ================================ */
     if (!pacienteId) {
       showError("Falta ?pacienteId= na URL.");
+      throw new Error("pacienteId ausente");
     }
-  
+    
+    backLink.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+    
+    /* ===============================
+       LOAD DATA
+    ================================ */
     const map = loadMap();
     const list = (map[pacienteId] || []).slice();
     let current = null;
-  
+    
     if (evolucaoId) {
       current = list.find(e => e.id === evolucaoId) || null;
-      if (!current) showError("Evolução não encontrada para este paciente.");
+      if (!current) showError("Evolução não encontrada.");
     }
-  
-    function showEdit() {
-      viewModeEl.style.display = "none";
-      editCardEl.style.display = "block";
-    }
-  
+    
+    /* ===============================
+       VIEW / EDIT TOGGLES
+    ================================ */
     function showView(ev) {
       editCardEl.style.display = "none";
       viewModeEl.style.display = "block";
@@ -241,204 +239,147 @@
       const regDate = ev.registeredAt ? isoToBRDate(ev.registeredAt) : "";
       const consultDate = ev.evolutionDate || regDate;
     
-      // 📅 Data sem "Data:"
       viewDateEl.textContent = consultDate || "";
     
-      // 🔴 Status INATIVA (caps menor, vermelho)
-      const statusEl = document.getElementById("viewStatus");
       if (ev.inactiveAt) {
-        statusEl.textContent = "INATIVA";
-        statusEl.style.color = "#c62828";
-        statusEl.style.fontWeight = "600";
-        statusEl.style.textTransform = "uppercase";
-        statusEl.style.fontSize = "12px";
-        statusEl.style.marginBottom = "8px";
-        statusEl.style.display = "block";
+        viewStatusEl.textContent = "INATIVA";
+        viewStatusEl.style.color = "#c62828";
+        viewStatusEl.style.fontWeight = "600";
+        viewStatusEl.style.textTransform = "uppercase";
+        viewStatusEl.style.fontSize = "12px";
+        viewStatusEl.style.marginTop = "6px";
+        viewStatusEl.style.display = "block";
       } else {
-        statusEl.style.display = "none";
+        viewStatusEl.style.display = "none";
       }
     
-      // 📝 Data de registro só se diferente
-      const showRegistered =
-        ev.evolutionDate &&
-        regDate &&
-        ev.evolutionDate !== regDate;
+      viewRegisteredEl.textContent =
+        ev.evolutionDate && ev.evolutionDate !== regDate
+          ? `Registrado em: ${regDate}`
+          : "";
     
-      viewRegisteredEl.textContent = showRegistered
-        ? `Registrado em: ${regDate}`
-        : "";
-    
-      // 🧠 Título da consulta (se houver)
-      viewConsultTitleEl.textContent = ev.titulo
-        ? ev.titulo
-        : "";
-    
-      // 📄 Texto da evolução
+      viewConsultTitleEl.textContent = ev.titulo || "";
       viewTextEl.textContent = ev.texto || "";
     }
-  
-    function lockEditing(message) {
+    
+    function showEdit() {
+      viewModeEl.style.display = "none";
+      editCardEl.style.display = "block";
+    }
+    
+    function lockEdit(msg) {
       dataEl.disabled = true;
       tituloEl.disabled = true;
       textoEl.disabled = true;
       saveBtn.disabled = true;
-  
       saveBtn.style.opacity = "0.6";
-      saveBtn.style.cursor = "not-allowed";
-  
-      if (message) infoEl.textContent = message;
+      if (msg) infoEl.textContent = msg;
     }
-  
-    function unlockEditing() {
+    
+    function unlockEdit() {
       dataEl.disabled = false;
       tituloEl.disabled = false;
       textoEl.disabled = false;
       saveBtn.disabled = false;
-  
       saveBtn.style.opacity = "1";
-      saveBtn.style.cursor = "pointer";
     }
-  
-    // ---------- render initial ----------
+    
+    /* ===============================
+       INITIAL RENDER
+    ================================ */
     const now = new Date().toISOString();
-  
+    
     if (current) {
       const isSigned = !!current.signedAt;
       const isInactive = !!current.inactiveAt;
-  
-      // Cabeçalho e infos
-      const reg = current.registeredAt ? new Date(current.registeredAt).toLocaleString("pt-BR") : new Date().toLocaleString("pt-BR");
-      infoEl.textContent = `Registrado em: ${reg}`;
-  
+    
+      infoEl.textContent = `Registrado em: ${new Date(current.registeredAt).toLocaleString("pt-BR")}`;
+    
       if (isSigned) {
-        const sAt = new Date(current.signedAt).toLocaleString("pt-BR");
-        signedInfoEl.textContent = `Assinada em: ${sAt}${isInactive ? " • INATIVA" : ""}`;
+        signedInfoEl.textContent =
+          `Assinada em: ${new Date(current.signedAt).toLocaleString("pt-BR")}` +
+          (isInactive ? " • INATIVA" : "");
       } else {
         signedInfoEl.textContent = "";
       }
-  
-      // Se viewMode ou assinado: abre em view
+    
       if (isViewMode || isSigned) {
-        titleEl.textContent = isInactive ? "Evolução (inativa)" : "Evolução";
+        titleEl.textContent = "Evolução";
         showView(current);
-        // Em view não faz sentido mostrar botões de editar/assinar
-        signBtn.style.display = "none";
         saveBtn.style.display = "none";
+        signBtn.style.display = "none";
       } else {
-        // Editável
         titleEl.textContent = "Editar evolução";
         showEdit();
         dataEl.value = current.evolutionDate || "";
         tituloEl.value = current.titulo || "";
         textoEl.value = current.texto || "";
-        unlockEditing();
+        unlockEdit();
         signBtn.style.display = "inline-block";
-        saveBtn.style.display = "inline-block";
       }
-  
+    
     } else {
-      // Nova evolução
       titleEl.textContent = "Nova evolução";
       showEdit();
-  
-      dataEl.value = "";      // opcional (retroativo)
-      tituloEl.value = "";
-      textoEl.value = "";
       infoEl.textContent = `Registrado em: ${new Date().toLocaleString("pt-BR")}`;
-      signedInfoEl.textContent = "";
-  
-      unlockEditing();
-      signBtn.style.display = "inline-block";
-      saveBtn.style.display = "inline-block";
-  
-      // mode=view sem id não faz sentido
-      if (isViewMode) {
-        lockEditing("Modo leitura.");
-        signBtn.style.display = "none";
-        saveBtn.style.display = "none";
-      }
+      unlockEdit();
     }
-  
-    // ---------- save ----------
-    saveBtn.type = "button";
+    
+    /* ===============================
+       SAVE
+    ================================ */
     saveBtn.addEventListener("click", () => {
-      if (!pacienteId) return;
-  
-      if (isViewMode) {
-        alert("Modo leitura: não é possível editar.");
-        return;
-      }
-  
-      const titulo = tituloEl.value.trim();
       const texto = textoEl.value.trim();
-      const evolutionDate = dataEl.value.trim() || null; // opcional
-      const now2 = new Date().toISOString();
-  
       if (!texto) {
         alert("Informe o texto da evolução.");
         return;
       }
-  
+    
+      const evolutionDate = dataEl.value.trim() || null;
+    
       if (current) {
-        // mantém registeredAt original
-        if (!current.registeredAt) current.registeredAt = now2;
-  
-        current.titulo = titulo;
+        current.titulo = tituloEl.value.trim();
         current.texto = texto;
         current.evolutionDate = evolutionDate;
-        current.updatedAt = now2;
-  
-        const idx = list.findIndex(e => e.id === current.id);
-        if (idx >= 0) list[idx] = current;
+        current.updatedAt = new Date().toISOString();
       } else {
         list.push({
           id: crypto.randomUUID(),
           pacienteId,
-          titulo,
+          titulo: tituloEl.value.trim(),
           texto,
           evolutionDate,
-          registeredAt: now2,
-          updatedAt: now2,
+          registeredAt: now,
+          updatedAt: now,
           signedAt: null,
           inactiveAt: null
         });
       }
-  
+    
       map[pacienteId] = list;
       saveMap(map);
       window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
     });
-  
-    // ---------- sign (only if current exists and not signed) ----------
-    signBtn.type = "button";
+    
+    /* ===============================
+       SIGN
+    ================================ */
     signBtn.addEventListener("click", () => {
-      if (!pacienteId) return;
-  
       if (!current) {
-        alert("Para assinar, salve a evolução primeiro.");
+        alert("Salve a evolução antes de assinar.");
         return;
       }
-  
-      if (current.signedAt) {
-        alert("Esta evolução já está assinada.");
-        return;
-      }
-  
-      const ok = confirm("Ao assinar, esta evolução não poderá mais ser editada.\n\nDeseja continuar?");
-      if (!ok) return;
-  
+    
+      if (!confirm("Ao assinar, a evolução não poderá mais ser editada.\n\nDeseja continuar?")) return;
+    
       current.signedAt = new Date().toISOString();
-      if (!current.registeredAt) current.registeredAt = current.signedAt;
-      current.updatedAt = current.updatedAt || current.signedAt;
-  
-      const idx = list.findIndex(e => e.id === current.id);
-      if (idx >= 0) list[idx] = current;
-  
+      current.updatedAt = current.signedAt;
+    
       map[pacienteId] = list;
       saveMap(map);
-  
-      // abre em modo view
-      window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(pacienteId)}&id=${encodeURIComponent(current.id)}&mode=view`;
+    
+      window.location.href =
+        `/evolucao-form.html?pacienteId=${encodeURIComponent(pacienteId)}&id=${encodeURIComponent(current.id)}&mode=view`;
     });
   </script>
 </body>
