@@ -126,77 +126,77 @@
   </div>
 
   <script>
-  const EVOL_KEY = "rae_evolucoes_v1";
-  
-  function loadMap() {
-    try {
-      return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}");
-    } catch {
-      return {};
+    const EVOL_KEY = "rae_evolucoes_v1";
+    
+    function loadMap() {
+      try {
+        return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}");
+      } catch {
+        return {};
+      }
     }
-  }
-  
-  function saveMap(map) {
-    localStorage.setItem(EVOL_KEY, JSON.stringify(map));
-  }
-  
-  function uid() {
-    return crypto.randomUUID();
-  }
-  
-  document.getElementById("saveBtn").addEventListener("click", () => {
-    const pacienteId = new URLSearchParams(location.search).get("pacienteId");
-    const evolId = new URLSearchParams(location.search).get("id");
-  
-    const titulo = document.getElementById("titulo").value.trim();
-    const texto = document.getElementById("texto").value.trim();
-    const evolDateRaw = document.getElementById("dataEvolucao").value; // opcional
-  
-    if (!texto) {
-      alert("Informe o texto da evolução.");
-      return;
+    
+    function saveMap(map) {
+      localStorage.setItem(EVOL_KEY, JSON.stringify(map));
     }
-  
-    const map = loadMap();
-    const list = map[pacienteId] || [];
-  
-    const now = new Date().toISOString();
-  
-    let evolutionDate = null;
-    if (evolDateRaw) {
-      evolutionDate = evolDateRaw; // já vem YYYY-MM-DD
+    
+    function uid() {
+      return crypto.randomUUID();
     }
-  
-    if (evolId) {
-      // editar evolução existente
-      const idx = list.findIndex(e => e.id === evolId);
-      if (idx >= 0) {
-        list[idx] = {
-          ...list[idx],
+    
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const pacienteId = new URLSearchParams(location.search).get("pacienteId");
+      const evolId = new URLSearchParams(location.search).get("id");
+    
+      const titulo = document.getElementById("titulo").value.trim();
+      const texto = document.getElementById("texto").value.trim();
+      const evolDateRaw = document.getElementById("dataEvolucao").value; // opcional
+    
+      if (!texto) {
+        alert("Informe o texto da evolução.");
+        return;
+      }
+    
+      const map = loadMap();
+      const list = map[pacienteId] || [];
+    
+      const now = new Date().toISOString();
+    
+      let evolutionDate = null;
+      if (evolDateRaw) {
+        evolutionDate = evolDateRaw; // já vem YYYY-MM-DD
+      }
+    
+      if (evolId) {
+        // editar evolução existente
+        const idx = list.findIndex(e => e.id === evolId);
+        if (idx >= 0) {
+          list[idx] = {
+            ...list[idx],
+            titulo,
+            texto,
+            evolutionDate,
+            updatedAt: now
+          };
+        }
+      } else {
+        // nova evolução
+        list.push({
+          id: uid(),
+          pacienteId,
           titulo,
           texto,
           evolutionDate,
+          registeredAt: now,
           updatedAt: now
-        };
+        });
       }
-    } else {
-      // nova evolução
-      list.push({
-        id: uid(),
-        pacienteId,
-        titulo,
-        texto,
-        evolutionDate,
-        registeredAt: now,
-        updatedAt: now
-      });
-    }
-  
-    map[pacienteId] = list;
-    saveMap(map);
-  
-    window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
-  });
+    
+      map[pacienteId] = list;
+      saveMap(map);
+    
+      window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+    });
   </script>
 </body>
 </html>
