@@ -115,9 +115,9 @@
 
     <!-- VIEW MODE (leitura) -->
     <div id="viewMode" style="display:none;">
+      <div id="viewStatus" class="label" style="display:none;"></div>
       <div id="viewDate" class="muted"></div>
       <div id="viewRegistered" class="muted" style="margin-top:6px;"></div>
-      <div id="viewStatus" class="label" style="margin-top:4px; display:none;"></div>
 
       <div id="viewConsultTitle" style="margin-top:14px; font-weight:600;"></div>
 
@@ -252,6 +252,7 @@
         statusEl.style.fontWeight = "600";
         statusEl.style.textTransform = "uppercase";
         statusEl.style.fontSize = "12px";
+        statusEl.style.marginBottom = "8px";
         statusEl.style.display = "block";
       } else {
         statusEl.style.display = "none";
