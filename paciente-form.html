@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Novo paciente • Rae Clínica Digital</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 720px; }
+    label { display:block; margin-top: 12px; font-weight: bold; }
+    input { width: 100%; padding: 10px; margin-top: 6px; }
+    .row { display:flex; gap: 12px; }
+    .row > div { flex: 1; }
+    button { margin-top: 16px; padding: 10px 12px; cursor:pointer; }
+    .muted { color:#666; font-size: 13px; }
+    #danger { background:#ffebee; border:1px solid #ef5350; color:#c62828; padding:10px; border-radius:8px; margin-top:12px; display:none; }
+  </style>
+</head>
+<body>
+  <a href="/pacientes.html">← Voltar</a>
+  <h1 id="title">Novo paciente</h1>
+  <p class="muted">Armazenado localmente no navegador (por enquanto).</p>
+
+  <div id="danger"></div>
+
+  <form id="form">
+    <label>Nome</label>
+    <input id="nome" required />
+
+    <div class="row">
+      <div>
+        <label>CPF (apenas números ou formatado)</label>
+        <input id="cpf" />
+      </div>
+      <div>
+        <label>Nascimento (dd/mm/aaaa)</label>
+        <input id="nascimento" placeholder="01/01/1990" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Telefone</label>
+        <input id="telefone" />
+      </div>
+      <div>
+        <label>E-mail</label>
+        <input id="email" />
+      </div>
+    </div>
+
+    <label>Endereço</label>
+    <input id="endereco" />
+
+    <button type="submit">Salvar</button>
+  </form>
+
+  <script>
+    const KEY = "rae_patients_v1";
+
+    function loadPatients() {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return [];
+      try { return JSON.parse(raw) || []; } catch { return []; }
+    }
+
+    function savePatients(patients) {
+      localStorage.setItem(KEY, JSON.stringify(patients));
+    }
+
+    function getId() {
+      return new URLSearchParams(location.search).get("id");
+    }
+
+    function uid() {
+      return "p_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+
+    function showError(msg) {
+      const d = document.getElementById("danger");
+      d.style.display = "block";
+      d.textContent = msg;
+    }
+
+    function clearError() {
+      const d = document.getElementById("danger");
+      d.style.display = "none";
+      d.textContent = "";
+    }
+
+    const id = getId();
+    const patients = loadPatients();
+    const existing = id ? patients.find(p => p.id === id) : null;
+
+    if (existing) {
+      document.getElementById("title").textContent = "Editar paciente";
+      document.getElementById("nome").value = existing.nome || "";
+      document.getElementById("cpf").value = existing.cpf || "";
+      document.getElementById("nascimento").value = existing.nascimento || "";
+      document.getElementById("telefone").value = existing.telefone || "";
+      document.getElementById("email").value = existing.email || "";
+      document.getElementById("endereco").value = existing.endereco || "";
+    }
+
+    document.getElementById("form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      clearError();
+
+      const nome = document.getElementById("nome").value.trim();
+      if (!nome) return showError("Nome é obrigatório.");
+
+      const cpf = document.getElementById("cpf").value.trim();
+      const cpfDigits = cpf.replace(/\D/g, "");
+      if (cpfDigits && cpfDigits.length !== 11) return showError("CPF precisa ter 11 dígitos (ou ficar vazio).");
+
+      const p = {
+        id: existing?.id || uid(),
+        nome,
+        cpf: cpfDigits || "",
+        nascimento: document.getElementById("nascimento").value.trim(),
+        telefone: document.getElementById("telefone").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        endereco: document.getElementById("endereco").value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const next = patients.filter(x => x.id !== p.id);
+      next.push(p);
+      savePatients(next);
+
+      window.location.href = "/pacientes.html";
+    });
+  </script>
+</body>
+</html>
