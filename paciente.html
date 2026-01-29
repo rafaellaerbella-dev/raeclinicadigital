@@ -175,6 +175,15 @@
       }
 
       // ===== Evoluções =====
+      const btnNova = document.getElementById("btnNovaEvolucao");
+      if (btnNova) {
+        btnNova.addEventListener("click", () => {
+          window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}`;
+        });
+      } else {
+        console.warn("btnNovaEvolucao não encontrado no DOM");
+      }
+      
       const EVOL_KEY = "rae_evolucoes_v1";
       
       function loadEvolMap() {
