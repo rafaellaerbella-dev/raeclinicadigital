@@ -118,7 +118,7 @@
       <div class="muted" id="info"></div>
     
       <div class="row">
-        <button id="saveBtn">💾 Salvar evolução</button>
+        <button id="saveBtn" type="button">💾 Salvar evolução</button>
       </div>
     </div>
 
@@ -198,6 +198,15 @@
     }
   
     // Salvar
+    const btn = document.getElementById("saveBtn");
+    if (!btn) {
+      alert("saveBtn não encontrado (id errado ou HTML não carregou).");
+    } else {
+      btn.addEventListener("click", () => {
+        // ... seu código de salvar
+      });
+    }
+    
     document.getElementById("saveBtn").addEventListener("click", () => {
       const dataEvolucao = (dataEvolucaoEl.value || "").trim();
       const titulo = (tituloEl.value || "").trim();
