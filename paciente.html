@@ -204,8 +204,12 @@
         const map = loadEvolMap();
         const evols = (map[pacienteId] || []).slice();
       
-        // ordenar (mais recente primeiro) — usa updatedAt como fallback
-        evols.sort((a,b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+        // Ordenar por updatedAt (mais recente primeiro). Se não tiver, usa registeredAt.
+        evols.sort((a, b) => {
+          const aa = a.updatedAt || a.registeredAt || "";
+          const bb = b.updatedAt || b.registeredAt || "";
+          return bb.localeCompare(aa);
+        });
       
         const list = document.getElementById("evolList");
         const empty = document.getElementById("evolEmpty");
@@ -218,14 +222,37 @@
           div.style.borderTop = "1px solid #eee";
           div.style.padding = "12px 0";
       
-          const titulo = ev.titulo ? `<div style="font-weight:600;">${escapeHtml(ev.titulo)}</div>` : "";
-          const preview = escapeHtml(ev.texto).slice(0, 180) + (ev.texto.length > 180 ? "…" : "");
+          const titulo = ev.titulo
+            ? `<div style="font-weight:600;">${escapeHtml(ev.titulo)}</div>`
+            : "";
+      
+          const texto = ev.texto || "";
+          const preview = escapeHtml(texto).slice(0, 180) + (texto.length > 180 ? "…" : "");
+      
+          // 🔹 Linha de datas
+          // - evolutionDate (opcional)
+          // - registeredAt (automático)
+          const evolucaoEm = ev.evolutionDate
+            ? `Evolução em ${escapeHtml(ev.evolutionDate)}`
+            : `Evolução (mesmo dia do registro)`;
+      
+          let registradaEm = "registrada em ?";
+          if (ev.registeredAt) {
+            try {
+              registradaEm = `registrada em ${new Date(ev.registeredAt).toLocaleDateString("pt-BR")}`;
+            } catch {}
+          }
+      
+          // Compat: se você ainda tiver ev.dt antigo, usa como fallback visual
+          const fallbackDt = ev.dt ? ` • ${escapeHtml(ev.dt)}` : "";
+      
+          const linhaData = `${evolucaoEm} • ${registradaEm}${fallbackDt}`;
       
           div.innerHTML = `
             <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
               <div style="flex:1;">
                 ${titulo}
-                <div class="label">${escapeHtml(ev.dt || "")}</div>
+                <div class="label">${linhaData}</div>
                 <div style="margin-top:6px;">${preview}</div>
               </div>
               <div style="display:flex; gap:8px;">
