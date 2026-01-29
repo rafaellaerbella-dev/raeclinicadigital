@@ -113,7 +113,20 @@
 
     <h1 id="title">Evolução</h1>
 
-    <div class="card">
+    <!-- VIEW MODE (leitura) -->
+    <div id="viewMode" style="display:none;">
+      <div class="muted" id="viewDate"></div>
+      <div class="muted" id="viewRegistered" style="margin-top:6px;"></div>
+
+      <div id="viewConsultTitle" style="margin-top:14px; font-weight:600;"></div>
+
+      <div class="card" style="margin-top:12px;">
+        <div id="viewText" style="white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- EDIT MODE (formulário) -->
+    <div class="card" id="editCard">
       <label for="dataEvolucao">Data da evolução (dd/mm/aaaa)</label>
       <input id="dataEvolucao" placeholder="29/01/2026" />
 
@@ -135,6 +148,9 @@
 
     <div id="error"></div>
   </div>
+
+  <!-- SCRIPT aqui embaixo -->
+</body>
 
   <script>
     const EVOL_KEY = "rae_evolucoes_v1";
