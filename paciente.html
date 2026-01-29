@@ -241,8 +241,8 @@
             ? `<div style="font-weight:600;">${escapeHtml(ev.titulo)}</div>`
             : "";
       
-          const texto = ev.texto || "";
-          const preview = escapeHtml(texto).slice(0, 180) + (texto.length > 180 ? "…" : "");
+          const tituloInline = ev.titulo ? ` (${escapeHtml(ev.titulo)})` : "";
+          const linhaPrincipal = `Evolução${tituloInline}`;
       
           // Status
           const statusBadge = isInactive
@@ -284,7 +284,7 @@
               <div style="flex:1; ${strikeStyle}">
                 ${tituloHtml}
                 <div class="label">${linhaData}${statusBadge}</div>
-                <div style="margin-top:6px;">${preview}</div>
+                <div style="margin-top:6px; font-weight:600;">${linhaPrincipal}</div>
               </div>
               <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 ${buttons}
