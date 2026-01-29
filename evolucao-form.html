@@ -126,113 +126,77 @@
   </div>
 
   <script>
-    const EVOL_KEY = "rae_evolucoes_v1";
+  const EVOL_KEY = "rae_evolucoes_v1";
   
-    const params = new URLSearchParams(location.search);
-    const pacienteId = params.get("pacienteId");
-    const evolucaoId = params.get("id"); // edição
-  
-    // Links e elementos
-    const backLink = document.getElementById("backLink");
-    const titleEl  = document.getElementById("title");
-    const errorEl  = document.getElementById("error");
-  
-    const dtEl     = document.getElementById("dt");         // campo data/hora da evolução (editável)
-    const tituloEl = document.getElementById("titulo");     // opcional
-    const textoEl  = document.getElementById("texto");      // obrigatório
-    const infoEl   = document.getElementById("info");
-    const saveBtn  = document.getElementById("saveBtn");
-  
-    function showError(msg) {
-      errorEl.style.display = "block";
-      errorEl.textContent = msg;
+  function loadMap() {
+    try {
+      return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}");
+    } catch {
+      return {};
     }
+  }
   
-    function nowBR() {
-      const d = new Date();
-      const pad = (n) => String(n).padStart(2, "0");
-      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  function saveMap(map) {
+    localStorage.setItem(EVOL_KEY, JSON.stringify(map));
+  }
+  
+  function uid() {
+    return crypto.randomUUID();
+  }
+  
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    const pacienteId = new URLSearchParams(location.search).get("pacienteId");
+    const evolId = new URLSearchParams(location.search).get("id");
+  
+    const titulo = document.getElementById("titulo").value.trim();
+    const texto = document.getElementById("texto").value.trim();
+    const evolDateRaw = document.getElementById("dataEvolucao").value; // opcional
+  
+    if (!texto) {
+      alert("Informe o texto da evolução.");
+      return;
     }
-  
-    function loadMap() {
-      try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); }
-      catch { return {}; }
-    }
-  
-    function saveMap(map) {
-      localStorage.setItem(EVOL_KEY, JSON.stringify(map));
-    }
-  
-    function uid() {
-      return "e_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-    }
-  
-    if (!pacienteId) {
-      showError("Falta ?pacienteId= na URL.");
-    }
-  
-    // volta para a ficha
-    if (backLink) backLink.href = `/paciente.html?id=${encodeURIComponent(pacienteId || "")}`;
   
     const map = loadMap();
-    const evols = (map[pacienteId] || []).slice();
+    const list = map[pacienteId] || [];
   
-    // achar evolução se for edição
-    let current = null;
-    if (evolucaoId) {
-      current = evols.find(e => e.id === evolucaoId);
-      if (!current) {
-        showError("Evolução não encontrada para este paciente.");
-      }
+    const now = new Date().toISOString();
+  
+    let evolutionDate = null;
+    if (evolDateRaw) {
+      evolutionDate = evolDateRaw; // já vem YYYY-MM-DD
     }
   
-    // preencher campos
-    if (titleEl) titleEl.textContent = current ? "Editar evolução" : "Nova evolução";
-  
-    if (dtEl) dtEl.value = current?.dt || nowBR();
-    if (tituloEl) tituloEl.value = current?.titulo || "";
-    if (textoEl) textoEl.value = current?.texto || "";
-  
-    if (infoEl) {
-      const reg = current?.updatedAt
-        ? new Date(current.updatedAt).toLocaleString("pt-BR")
-        : new Date().toLocaleString("pt-BR");
-      infoEl.textContent = "Registrado em: " + reg;
-    }
-  
-    // salvar (garante que o botão não submete form)
-    if (saveBtn) saveBtn.type = "button";
-  
-    saveBtn?.addEventListener("click", () => {
-      const dt = (dtEl?.value || "").trim();
-      const titulo = (tituloEl?.value || "").trim();
-      const texto = (textoEl?.value || "").trim();
-  
-      if (!dt) { alert("Informe a data/hora da evolução."); return; }
-      if (!texto) { alert("O texto da evolução não pode ficar vazio."); return; }
-  
-      if (current) {
-        current.dt = dt;
-        current.titulo = titulo;
-        current.texto = texto;
-        current.updatedAt = new Date().toISOString();
-      } else {
-        evols.push({
-          id: uid(),
-          dt,
+    if (evolId) {
+      // editar evolução existente
+      const idx = list.findIndex(e => e.id === evolId);
+      if (idx >= 0) {
+        list[idx] = {
+          ...list[idx],
           titulo,
           texto,
-          updatedAt: new Date().toISOString()
-        });
+          evolutionDate,
+          updatedAt: now
+        };
       }
+    } else {
+      // nova evolução
+      list.push({
+        id: uid(),
+        pacienteId,
+        titulo,
+        texto,
+        evolutionDate,
+        registeredAt: now,
+        updatedAt: now
+      });
+    }
   
-      // grava de volta no mapa
-      map[pacienteId] = evols;
-      saveMap(map);
+    map[pacienteId] = list;
+    saveMap(map);
   
-      // volta para ficha
-      window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
-    });
+    window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+  });
   </script>
 </body>
 </html>
