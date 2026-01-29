@@ -126,116 +126,111 @@
   </div>
 
   <script>
-    const KEY = "RAE_EVOLUCOES_V1";
+    const EVOL_KEY = "rae_evolucoes_v1";
   
     const params = new URLSearchParams(location.search);
     const pacienteId = params.get("pacienteId");
-    const evolucaoId = params.get("id"); // se existir, é edição
+    const evolucaoId = params.get("id"); // edição
   
-    document.getElementById("backLink").href =
-      `/paciente.html?id=${encodeURIComponent(pacienteId || "")}`;
+    // Links e elementos
+    const backLink = document.getElementById("backLink");
+    const titleEl  = document.getElementById("title");
+    const errorEl  = document.getElementById("error");
+  
+    const dtEl     = document.getElementById("dt");         // campo data/hora da evolução (editável)
+    const tituloEl = document.getElementById("titulo");     // opcional
+    const textoEl  = document.getElementById("texto");      // obrigatório
+    const infoEl   = document.getElementById("info");
+    const saveBtn  = document.getElementById("saveBtn");
   
     function showError(msg) {
-      const e = document.getElementById("error");
-      e.textContent = msg;
-      e.style.display = "block";
+      errorEl.style.display = "block";
+      errorEl.textContent = msg;
     }
   
-    function loadAll() {
-      try { return JSON.parse(localStorage.getItem(KEY)) || []; }
-      catch { return []; }
-    }
-  
-    function saveAll(list) {
-      localStorage.setItem(KEY, JSON.stringify(list));
-    }
-  
-    function todayBR() {
+    function nowBR() {
       const d = new Date();
       const pad = (n) => String(n).padStart(2, "0");
-      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
   
-    const evolucoes = loadAll();
+    function loadMap() {
+      try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); }
+      catch { return {}; }
+    }
+  
+    function saveMap(map) {
+      localStorage.setItem(EVOL_KEY, JSON.stringify(map));
+    }
+  
+    function uid() {
+      return "e_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
   
     if (!pacienteId) {
-      showError("pacienteId não informado na URL.");
+      showError("Falta ?pacienteId= na URL.");
     }
   
-    // Localiza evolução para edição
+    // volta para a ficha
+    if (backLink) backLink.href = `/paciente.html?id=${encodeURIComponent(pacienteId || "")}`;
+  
+    const map = loadMap();
+    const evols = (map[pacienteId] || []).slice();
+  
+    // achar evolução se for edição
     let current = null;
     if (evolucaoId) {
-      current = evolucoes.find(e => e.id === evolucaoId);
-      if (!current) showError("Evolução não encontrada.");
-    }
-  
-    // Preenche form
-    const dataEvolucaoEl = document.getElementById("dataEvolucao");
-    const tituloEl = document.getElementById("titulo");
-    const textoEl = document.getElementById("texto");
-    const infoEl = document.getElementById("info");
-  
-    if (!dataEvolucaoEl || !tituloEl || !textoEl || !infoEl) {
-      showError("Campos do formulário não encontrados (verifique ids: dataEvolucao, titulo, texto, info).");
-    } else {
-      if (current) {
-        // Modo edição
-        document.getElementById("title").textContent = "Editar evolução";
-        dataEvolucaoEl.value = current.dataEvolucao || "";
-        tituloEl.value = current.titulo || "";
-        textoEl.value = current.texto || "";
-        infoEl.textContent = current.registradoEm
-          ? ("Registrado em: " + new Date(current.registradoEm).toLocaleString("pt-BR"))
-          : "Registrado em: (desconhecido)";
-      } else {
-        // Modo novo
-        document.getElementById("title").textContent = "Nova evolução";
-        dataEvolucaoEl.value = todayBR();
-        tituloEl.value = "";
-        textoEl.value = "";
-        infoEl.textContent = "Registrado em: " + new Date().toLocaleString("pt-BR");
+      current = evols.find(e => e.id === evolucaoId);
+      if (!current) {
+        showError("Evolução não encontrada para este paciente.");
       }
     }
   
-    // Salvar
-    const btn = document.getElementById("saveBtn");
-    if (!btn) {
-      alert("saveBtn não encontrado (id errado ou HTML não carregou).");
-    } else {
-      btn.addEventListener("click", () => {
-        // ... seu código de salvar
-      });
-    }
-    
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      const dataEvolucao = (dataEvolucaoEl.value || "").trim();
-      const titulo = (tituloEl.value || "").trim();
-      const texto = (textoEl.value || "").trim();
+    // preencher campos
+    if (titleEl) titleEl.textContent = current ? "Editar evolução" : "Nova evolução";
   
-      if (!pacienteId) return;
-      if (!dataEvolucao) { alert("Informe a data da evolução (dd/mm/aaaa)."); return; }
-      if (!texto) { alert("A evolução não pode ficar vazia."); return; }
+    if (dtEl) dtEl.value = current?.dt || nowBR();
+    if (tituloEl) tituloEl.value = current?.titulo || "";
+    if (textoEl) textoEl.value = current?.texto || "";
+  
+    if (infoEl) {
+      const reg = current?.updatedAt
+        ? new Date(current.updatedAt).toLocaleString("pt-BR")
+        : new Date().toLocaleString("pt-BR");
+      infoEl.textContent = "Registrado em: " + reg;
+    }
+  
+    // salvar (garante que o botão não submete form)
+    if (saveBtn) saveBtn.type = "button";
+  
+    saveBtn?.addEventListener("click", () => {
+      const dt = (dtEl?.value || "").trim();
+      const titulo = (tituloEl?.value || "").trim();
+      const texto = (textoEl?.value || "").trim();
+  
+      if (!dt) { alert("Informe a data/hora da evolução."); return; }
+      if (!texto) { alert("O texto da evolução não pode ficar vazio."); return; }
   
       if (current) {
-        // Atualiza
-        current.dataEvolucao = dataEvolucao;
+        current.dt = dt;
         current.titulo = titulo;
         current.texto = texto;
-  
-        // Mantém registradoEm original (não mexe)
+        current.updatedAt = new Date().toISOString();
       } else {
-        // Cria nova
-        evolucoes.push({
-          id: crypto.randomUUID(),
-          pacienteId,
-          dataEvolucao,                 // ✅ editável
+        evols.push({
+          id: uid(),
+          dt,
           titulo,
           texto,
-          registradoEm: new Date().toISOString() // ✅ automático
+          updatedAt: new Date().toISOString()
         });
       }
   
-      saveAll(evolucoes);
+      // grava de volta no mapa
+      map[pacienteId] = evols;
+      saveMap(map);
+  
+      // volta para ficha
       window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
     });
   </script>
