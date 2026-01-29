@@ -173,6 +173,85 @@
           window.location.href = url;
         });
       }
+
+      // ===== Evoluções =====
+      const EVOL_KEY = "rae_evolucoes_v1";
+      
+      function loadEvolMap() {
+        try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); } catch { return {}; }
+      }
+      
+      function saveEvolMap(map) {
+        localStorage.setItem(EVOL_KEY, JSON.stringify(map));
+      }
+      
+      function escapeHtml(s) {
+        return (s || "").replace(/[&<>"']/g, (c) => ({
+          "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+        }[c]));
+      }
+      
+      function renderEvolucoes(pacienteId) {
+        const map = loadEvolMap();
+        const evols = (map[pacienteId] || []).slice();
+      
+        // ordenar (mais recente primeiro) — usa updatedAt como fallback
+        evols.sort((a,b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+      
+        const list = document.getElementById("evolList");
+        const empty = document.getElementById("evolEmpty");
+      
+        list.innerHTML = "";
+        empty.style.display = evols.length ? "none" : "block";
+      
+        evols.forEach(ev => {
+          const div = document.createElement("div");
+          div.style.borderTop = "1px solid #eee";
+          div.style.padding = "12px 0";
+      
+          const titulo = ev.titulo ? `<div style="font-weight:600;">${escapeHtml(ev.titulo)}</div>` : "";
+          const preview = escapeHtml(ev.texto).slice(0, 180) + (ev.texto.length > 180 ? "…" : "");
+      
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+              <div style="flex:1;">
+                ${titulo}
+                <div class="label">${escapeHtml(ev.dt || "")}</div>
+                <div style="margin-top:6px;">${preview}</div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button data-edit-evol="${escapeHtml(ev.id)}">Editar</button>
+                <button data-del-evol="${escapeHtml(ev.id)}">Excluir</button>
+              </div>
+            </div>
+          `;
+          list.appendChild(div);
+        });
+      }
+      
+      document.getElementById("btnNovaEvolucao")?.addEventListener("click", () => {
+        window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}`;
+      });
+      
+      document.getElementById("evolList")?.addEventListener("click", (e) => {
+        const editId = e.target?.getAttribute?.("data-edit-evol");
+        const delId = e.target?.getAttribute?.("data-del-evol");
+      
+        if (editId) {
+          window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}&id=${encodeURIComponent(editId)}`;
+        }
+      
+        if (delId) {
+          const map = loadEvolMap();
+          const evols = (map[id] || []).filter(ev => ev.id !== delId);
+          map[id] = evols;
+          saveEvolMap(map);
+          renderEvolucoes(id);
+        }
+      });
+      
+      // chama render ao final (depois que p foi carregado)
+      renderEvolucoes(id);
     }
   </script>
 </body>
