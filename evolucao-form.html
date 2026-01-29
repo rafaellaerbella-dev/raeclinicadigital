@@ -201,8 +201,8 @@
     
       map[pacienteId] = list;
       saveMap(map);
-    
-      window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+
+      window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}&id=${encodeURIComponent(editId)}`;
     });
   </script>
 </body>
