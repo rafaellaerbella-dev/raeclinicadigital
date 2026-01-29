@@ -237,16 +237,42 @@
     function showView(ev) {
       editCardEl.style.display = "none";
       viewModeEl.style.display = "block";
-  
+    
       const regDate = ev.registeredAt ? isoToBRDate(ev.registeredAt) : "";
-      const consultDate = ev.evolutionDate ? ev.evolutionDate : regDate;
-  
-      viewDateEl.textContent = `Data: ${consultDate || ""}`;
-  
-      const shouldShowReg = ev.evolutionDate && regDate && ev.evolutionDate !== regDate;
-      viewRegisteredEl.textContent = shouldShowReg ? `Registrado em: ${regDate}` : "";
-  
-      viewConsultTitleEl.textContent = ev.titulo ? `Título: ${ev.titulo}` : "";
+      const consultDate = ev.evolutionDate || regDate;
+    
+      // 📅 Data sem "Data:"
+      viewDateEl.textContent = consultDate || "";
+    
+      // 🔴 Status INATIVA (caps menor, vermelho)
+      const statusEl = document.getElementById("viewStatus");
+      if (ev.inactiveAt) {
+        statusEl.textContent = "INATIVA";
+        statusEl.style.color = "#c62828";
+        statusEl.style.fontWeight = "600";
+        statusEl.style.textTransform = "uppercase";
+        statusEl.style.fontSize = "12px";
+        statusEl.style.display = "block";
+      } else {
+        statusEl.style.display = "none";
+      }
+    
+      // 📝 Data de registro só se diferente
+      const showRegistered =
+        ev.evolutionDate &&
+        regDate &&
+        ev.evolutionDate !== regDate;
+    
+      viewRegisteredEl.textContent = showRegistered
+        ? `Registrado em: ${regDate}`
+        : "";
+    
+      // 🧠 Título da consulta (se houver)
+      viewConsultTitleEl.textContent = ev.titulo
+        ? ev.titulo
+        : "";
+    
+      // 📄 Texto da evolução
       viewTextEl.textContent = ev.texto || "";
     }
   
