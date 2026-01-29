@@ -3,54 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pacientes • RAE Clínica Digital</title>
+  <title>Paciente • Rae Clínica Digital</title>
+
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; max-width: 900px; }
-    a { color: #0b66c3; text-decoration: none; }
-    .row { display:flex; gap: 12px; align-items:center; justify-content: space-between; }
     .card { border:1px solid #eee; padding:16px; border-radius:10px; margin-top: 16px; }
-    button { padding:10px 12px; cursor:pointer; }
-    input { padding:10px; width: 100%; max-width: 420px; }
-    .list { margin-top: 12px; }
-    .item { padding: 12px; border-top: 1px solid #eee; display:flex; justify-content: space-between; gap: 12px; }
-    .muted { color:#666; font-size: 13px; }
+    .row { display:flex; gap: 12px; flex-wrap: wrap; }
+    .field { min-width: 260px; }
+    .label { color:#666; font-size: 13px; }
+    .value { font-size: 18px; font-weight: 600; }
+    button { padding:10px 12px; cursor:pointer; border-radius:8px; border:1px solid #ddd; background:#fff; }
+    .actions { display:flex; gap:10px; flex-wrap: wrap; margin-top: 12px; }
+    #error { background:#ffebee; border:1px solid #ef5350; color:#c62828; padding:12px; border-radius:10px; display:none; }
+    a { color:#0b66c3; text-decoration:none; }
   </style>
+
+  <script>
+    // 🔒 Proteção por login (mesmo padrão das outras páginas)
+    (async () => {
+      try {
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
+        const j = await r.json().catch(() => ({}));
+        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
+
+        const showApp = () => {
+          const el = document.getElementById("app");
+          if (el) el.style.display = "block";
+        };
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", showApp);
+        } else {
+          showApp();
+        }
+      } catch {
+        window.location.href = "/auth/login.html";
+      }
+    })();
+  </script>
 </head>
+
 <body>
-  <a href="/index.html">← Voltar</a>
-  <h1>Pacientes</h1>
+  <div id="app" style="display:none;">
+    <a href="/pacientes.html">← Voltar</a>
 
-  <div class="row">
-    <input id="search" placeholder="Buscar por nome ou CPF…" />
-    <button id="newBtn">+ Novo paciente</button>
-  </div>
+    <h1 id="title">Paciente</h1>
 
-  <div class="card">
-    <div class="row">
-      <div>
-        <strong>Lista</strong><br/>
-        <span class="muted">Armazenamento local no navegador (por enquanto).</span>
+    <div id="error"></div>
+
+    <div class="card" id="card" style="display:none;">
+      <div class="row">
+        <div class="field">
+          <div class="label">Nome</div>
+          <div class="value" id="nome"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">CPF</div>
+          <div class="value" id="cpf"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Nascimento</div>
+          <div class="value" id="nascimento"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Telefone</div>
+          <div class="value" id="telefone"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">E-mail</div>
+          <div class="value" id="email"></div>
+        </div>
+
+        <div class="field" style="flex:1;">
+          <div class="label">Endereço</div>
+          <div class="value" id="endereco"></div>
+        </div>
       </div>
-      <button id="exportBtn">Exportar JSON</button>
-    </div>
 
-    <div id="list" class="list"></div>
-    <div id="empty" class="muted" style="display:none;margin-top:10px;">
-      Nenhum paciente ainda. Clique em “Novo paciente”.
+      <div class="actions">
+        <button id="btnEditar">Editar</button>
+        <button id="btnPrescrever">💊 Prescrever (Memed)</button>
+      </div>
     </div>
   </div>
 
   <script>
     const KEY = "rae_patients_v1";
+    const PRESCRITOR_ID = "30011eb5-00e8-4cb0-8c3a-f9ee64567dfd";
+
+    function qs(k){ return new URLSearchParams(location.search).get(k); }
 
     function loadPatients() {
       const raw = localStorage.getItem(KEY);
       if (!raw) return [];
       try { return JSON.parse(raw) || []; } catch { return []; }
-    }
-
-    function savePatients(patients) {
-      localStorage.setItem(KEY, JSON.stringify(patients));
     }
 
     function fmtCpf(cpf) {
@@ -59,64 +108,55 @@
       return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     }
 
-    function render() {
-      const patients = loadPatients();
-      const q = (document.getElementById("search").value || "").toLowerCase().trim();
-      const filtered = patients.filter(p => {
-        const hay = `${p.nome||""} ${p.cpf||""}`.toLowerCase();
-        return !q || hay.includes(q);
-      });
-
-      const list = document.getElementById("list");
-      list.innerHTML = "";
-
-      document.getElementById("empty").style.display = filtered.length ? "none" : "block";
-
-      filtered
-        .sort((a,b) => (a.nome||"").localeCompare(b.nome||""))
-        .forEach(p => {
-          const div = document.createElement("div");
-          div.className = "item";
-          div.innerHTML = `
-            <div>
-              <strong>${p.nome || "(sem nome)"}</strong><br/>
-              <span class="muted">CPF: ${fmtCpf(p.cpf)} • Nasc: ${p.nascimento || ""}</span>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <button data-edit="${p.id}">Editar</button>
-              <button data-open="${p.id}">Abrir</button>
-            </div>
-          `;
-          list.appendChild(div);
-        });
+    function showError(msg) {
+      const e = document.getElementById("error");
+      e.style.display = "block";
+      e.textContent = msg;
+      document.getElementById("card").style.display = "none";
     }
 
-    document.getElementById("search").addEventListener("input", render);
+    function showCard() {
+      document.getElementById("error").style.display = "none";
+      document.getElementById("card").style.display = "block";
+    }
 
-    document.getElementById("newBtn").addEventListener("click", () => {
-      window.location.href = "/paciente-form.html";
-    });
-
-    document.getElementById("exportBtn").addEventListener("click", () => {
+    const id = qs("id");
+    if (!id) {
+      showError("Falta o parâmetro ?id= do paciente.");
+    } else {
       const patients = loadPatients();
-      const blob = new Blob([JSON.stringify(patients, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "pacientes.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+      const p = patients.find(x => x.id === id);
 
-    document.addEventListener("click", (e) => {
-      const editId = e.target?.getAttribute?.("data-edit");
-      const openId = e.target?.getAttribute?.("data-open");
-      if (editId) window.location.href = `/paciente-form.html?id=${encodeURIComponent(editId)}`;
-      if (openId) window.location.href = `/paciente.html?id=${encodeURIComponent(openId)}`;
-    });
+      if (!p) {
+        showError("Paciente não encontrado no armazenamento local.");
+      } else {
+        document.getElementById("title").textContent = p.nome || "Paciente";
+        document.getElementById("nome").textContent = p.nome || "";
+        document.getElementById("cpf").textContent = fmtCpf(p.cpf || "");
+        document.getElementById("nascimento").textContent = p.nascimento || "";
+        document.getElementById("telefone").textContent = p.telefone || "";
+        document.getElementById("email").textContent = p.email || "";
+        document.getElementById("endereco").textContent = p.endereco || "";
 
-    // Se não existir página paciente.html ainda, vamos criar no próximo passo.
-    render();
+        showCard();
+
+        document.getElementById("btnEditar").addEventListener("click", () => {
+          window.location.href = `/paciente-form.html?id=${encodeURIComponent(id)}`;
+        });
+
+        document.getElementById("btnPrescrever").addEventListener("click", () => {
+          const url =
+            `/prescricao.html?prescritorId=${encodeURIComponent(PRESCRITOR_ID)}` +
+            `&pacienteId=${encodeURIComponent(p.id)}` +
+            `&nome=${encodeURIComponent(p.nome || "")}` +
+            `&telefone=${encodeURIComponent(p.telefone || "")}` +
+            `&cpf=${encodeURIComponent(p.cpf || "")}` +
+            `&nascimento=${encodeURIComponent(p.nascimento || "")}`;
+
+          window.location.href = url;
+        });
+      }
+    }
   </script>
 </body>
 </html>
