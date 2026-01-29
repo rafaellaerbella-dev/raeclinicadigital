@@ -37,10 +37,11 @@
       font-size: 14px;
     }
 
-    textarea {
-      min-height: 260px;
-      resize: vertical;
-    }
+      textarea {
+        min-height: 260px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
 
     .row {
       display:flex;
@@ -105,14 +106,17 @@
     <h1>Evolução</h1>
 
     <div class="card">
+      <label for="dataEvolucao">Data da evolução (dd/mm/aaaa)</label>
+      <input id="dataEvolucao" placeholder="29/01/2026" />
+    
       <label for="titulo">Título (opcional)</label>
       <input id="titulo" placeholder="Ex: Consulta de seguimento" />
-
+    
       <label for="texto">Evolução</label>
       <textarea id="texto" placeholder="Digite a evolução clínica..."></textarea>
-
+    
       <div class="muted" id="info"></div>
-
+    
       <div class="row">
         <button id="saveBtn">💾 Salvar evolução</button>
       </div>
@@ -123,79 +127,107 @@
 
   <script>
     const KEY = "RAE_EVOLUCOES_V1";
-
+  
     const params = new URLSearchParams(location.search);
     const pacienteId = params.get("pacienteId");
-    const evolucaoId = params.get("id");
-
-    if (!pacienteId) {
-      showError("pacienteId não informado na URL.");
-    }
-
+    const evolucaoId = params.get("id"); // se existir, é edição
+  
     document.getElementById("backLink").href =
-      `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
-
-    function loadAll() {
-      try {
-        return JSON.parse(localStorage.getItem(KEY)) || [];
-      } catch {
-        return [];
-      }
-    }
-
-    function saveAll(list) {
-      localStorage.setItem(KEY, JSON.stringify(list));
-    }
-
+      `/paciente.html?id=${encodeURIComponent(pacienteId || "")}`;
+  
     function showError(msg) {
       const e = document.getElementById("error");
       e.textContent = msg;
       e.style.display = "block";
     }
-
+  
+    function loadAll() {
+      try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+      catch { return []; }
+    }
+  
+    function saveAll(list) {
+      localStorage.setItem(KEY, JSON.stringify(list));
+    }
+  
+    function todayBR() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+    }
+  
     const evolucoes = loadAll();
+  
+    if (!pacienteId) {
+      showError("pacienteId não informado na URL.");
+    }
+  
+    // Localiza evolução para edição
     let current = null;
-
     if (evolucaoId) {
       current = evolucoes.find(e => e.id === evolucaoId);
-      if (!current) {
-        showError("Evolução não encontrada.");
-      } else {
-        document.getElementById("titulo").value = current.titulo || "";
-        document.getElementById("texto").value = current.texto || "";
-        document.getElementById("info").textContent =
-          "Editando evolução de " + current.data;
-      }
-    } else {
-      document.getElementById("info").textContent =
-        "Nova evolução • " + new Date().toLocaleString("pt-BR");
+      if (!current) showError("Evolução não encontrada.");
     }
-
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      const titulo = document.getElementById("titulo").value.trim();
-      const texto = document.getElementById("texto").value.trim();
-
-      if (!texto) {
-        alert("A evolução não pode ficar vazia.");
-        return;
-      }
-
+  
+    // Preenche form
+    const dataEvolucaoEl = document.getElementById("dataEvolucao");
+    const tituloEl = document.getElementById("titulo");
+    const textoEl = document.getElementById("texto");
+    const infoEl = document.getElementById("info");
+  
+    if (!dataEvolucaoEl || !tituloEl || !textoEl || !infoEl) {
+      showError("Campos do formulário não encontrados (verifique ids: dataEvolucao, titulo, texto, info).");
+    } else {
       if (current) {
+        // Modo edição
+        document.getElementById("title").textContent = "Editar evolução";
+        dataEvolucaoEl.value = current.dataEvolucao || "";
+        tituloEl.value = current.titulo || "";
+        textoEl.value = current.texto || "";
+        infoEl.textContent = current.registradoEm
+          ? ("Registrado em: " + new Date(current.registradoEm).toLocaleString("pt-BR"))
+          : "Registrado em: (desconhecido)";
+      } else {
+        // Modo novo
+        document.getElementById("title").textContent = "Nova evolução";
+        dataEvolucaoEl.value = todayBR();
+        tituloEl.value = "";
+        textoEl.value = "";
+        infoEl.textContent = "Registrado em: " + new Date().toLocaleString("pt-BR");
+      }
+    }
+  
+    // Salvar
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const dataEvolucao = (dataEvolucaoEl.value || "").trim();
+      const titulo = (tituloEl.value || "").trim();
+      const texto = (textoEl.value || "").trim();
+  
+      if (!pacienteId) return;
+      if (!dataEvolucao) { alert("Informe a data da evolução (dd/mm/aaaa)."); return; }
+      if (!texto) { alert("A evolução não pode ficar vazia."); return; }
+  
+      if (current) {
+        // Atualiza
+        current.dataEvolucao = dataEvolucao;
         current.titulo = titulo;
         current.texto = texto;
+  
+        // Mantém registradoEm original (não mexe)
       } else {
+        // Cria nova
         evolucoes.push({
           id: crypto.randomUUID(),
           pacienteId,
+          dataEvolucao,                 // ✅ editável
           titulo,
           texto,
-          data: new Date().toLocaleString("pt-BR")
+          registradoEm: new Date().toISOString() // ✅ automático
         });
       }
-
+  
       saveAll(evolucoes);
-      window.location.href =
-        `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+      window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
     });
   </script>
 </body>
