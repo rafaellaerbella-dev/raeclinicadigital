@@ -126,83 +126,125 @@
   </div>
 
   <script>
-    const pacienteId = new URLSearchParams(location.search).get("pacienteId");
-    const back = document.getElementById("backLink");
-  
-    if (back) {
-      if (pacienteId) {
-        back.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
-      } else {
-        back.href = "/pacientes.html";
-      }
-    }
-  </script>
-  
-  <script>
     const EVOL_KEY = "rae_evolucoes_v1";
-    
+  
+    function qs(k) { return new URLSearchParams(location.search).get(k); }
+  
     function loadMap() {
-      try {
-        return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}");
-      } catch {
-        return {};
-      }
+      try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); }
+      catch { return {}; }
     }
-    
+  
     function saveMap(map) {
       localStorage.setItem(EVOL_KEY, JSON.stringify(map));
     }
-    
-    function uid() {
-      return crypto.randomUUID();
+  
+    function showError(msg) {
+      const e = document.getElementById("error");
+      e.style.display = "block";
+      e.textContent = msg;
     }
-    
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      const pacienteId = new URLSearchParams(location.search).get("pacienteId");
-      const evolId = new URLSearchParams(location.search).get("id");
-    
-      const titulo = document.getElementById("titulo").value.trim();
-      const texto = document.getElementById("texto").value.trim();
-      const evolDateRaw = document.getElementById("dataEvolucao").value; // opcional
-    
+  
+    // --- parâmetros ---
+    const pacienteId = qs("pacienteId");
+    const evolucaoId = qs("id"); // se existir, é edição
+  
+    if (!pacienteId) showError("Falta ?pacienteId= na URL.");
+  
+    // --- back link ---
+    const back = document.getElementById("backLink");
+    if (back) {
+      back.href = pacienteId
+        ? `/paciente.html?id=${encodeURIComponent(pacienteId)}`
+        : "/pacientes.html";
+    }
+  
+    // --- elementos do formulário ---
+    const titleEl = document.getElementById("title");
+    const dataEl = document.getElementById("dataEvolucao"); // opcional
+    const tituloEl = document.getElementById("titulo");
+    const textoEl = document.getElementById("texto");
+    const infoEl = document.getElementById("info");
+    const saveBtn = document.getElementById("saveBtn");
+  
+    if (!titleEl || !dataEl || !tituloEl || !textoEl || !infoEl || !saveBtn) {
+      showError("IDs faltando no HTML (title, dataEvolucao, titulo, texto, info, saveBtn).");
+    }
+  
+    // --- carrega evolução se for edição ---
+    const map = loadMap();
+    const list = (map[pacienteId] || []).slice();
+    let current = null;
+  
+    if (evolucaoId) {
+      current = list.find(e => e.id === evolucaoId) || null;
+      if (!current) {
+        showError("Evolução não encontrada para este paciente.");
+      }
+    }
+  
+    // --- preencher tela ---
+    const nowIso = new Date().toISOString();
+    if (current) {
+      titleEl.textContent = "Editar evolução";
+      dataEl.value = current.evolutionDate || "";      // opcional
+      tituloEl.value = current.titulo || "";
+      textoEl.value = current.texto || "";
+      infoEl.textContent = current.registeredAt
+        ? `Registrado em: ${new Date(current.registeredAt).toLocaleString("pt-BR")}`
+        : `Registrado em: ${new Date().toLocaleString("pt-BR")}`;
+    } else {
+      titleEl.textContent = "Nova evolução";
+      dataEl.value = ""; // opcional (só preencher se retroativo)
+      tituloEl.value = "";
+      textoEl.value = "";
+      infoEl.textContent = `Registrado em: ${new Date().toLocaleString("pt-BR")}`;
+    }
+  
+    // garante que não submete form
+    saveBtn.type = "button";
+  
+    // --- salvar ---
+    saveBtn.addEventListener("click", () => {
+      if (!pacienteId) return;
+  
+      const titulo = tituloEl.value.trim();
+      const texto = textoEl.value.trim();
+      const evolutionDate = dataEl.value.trim() || null; // opcional
+      const now = new Date().toISOString();
+  
       if (!texto) {
         alert("Informe o texto da evolução.");
         return;
       }
-    
-      const map = loadMap();
-      const list = map[pacienteId] || [];
-    
-      const now = new Date().toISOString();
-
-      // evolutionDate opcional (só se retroativo)
-      const evolutionDate = (dataEvolucaoEl?.value || "").trim() || null;
-      
+  
       if (current) {
-        // ✅ mantém a data original do registro
+        // mantém data do registro sempre a original
         if (!current.registeredAt) current.registeredAt = now;
-      
         current.titulo = titulo;
         current.texto = texto;
         current.evolutionDate = evolutionDate;
-      
-        // ✅ atualiza somente updatedAt
         current.updatedAt = now;
+  
+        const idx = list.findIndex(e => e.id === current.id);
+        if (idx >= 0) list[idx] = current;
       } else {
-        evols.push({
-          id: uid(),
-          evolutionDate,     // opcional
+        list.push({
+          id: crypto.randomUUID(),
+          pacienteId,
           titulo,
           texto,
-          registeredAt: now, // ✅ sempre hoje
-          updatedAt: now     // ✅ sempre hoje na criação
+          evolutionDate,      // opcional (retroativo)
+          registeredAt: now,  // sempre hoje
+          updatedAt: now
         });
       }
-    
+  
       map[pacienteId] = list;
       saveMap(map);
-
-      window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}`;
+  
+      // ✅ volta para a ficha do paciente
+      window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
     });
   </script>
 </body>
