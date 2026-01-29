@@ -278,6 +278,12 @@
         }
       
         if (delId) {
+          const ok = confirm(
+            "Tem certeza que deseja excluir esta evolução?\n\nEssa ação não poderá ser desfeita."
+          );
+        
+          if (!ok) return;
+        
           const map = loadEvolMap();
           const evols = (map[id] || []).filter(ev => ev.id !== delId);
           map[id] = evols;
