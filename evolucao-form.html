@@ -174,34 +174,28 @@
       const list = map[pacienteId] || [];
     
       const now = new Date().toISOString();
-    
-      let evolutionDate = null;
-      if (evolDateRaw) {
-        evolutionDate = evolDateRaw; // já vem YYYY-MM-DD
-      }
-    
-      if (evolId) {
-        // editar evolução existente
-        const idx = list.findIndex(e => e.id === evolId);
-        if (idx >= 0) {
-          list[idx] = {
-            ...list[idx],
-            titulo,
-            texto,
-            evolutionDate,
-            updatedAt: now
-          };
-        }
+
+      // evolutionDate opcional (só se retroativo)
+      const evolutionDate = (dataEvolucaoEl?.value || "").trim() || null;
+      
+      if (current) {
+        // ✅ mantém a data original do registro
+        if (!current.registeredAt) current.registeredAt = now;
+      
+        current.titulo = titulo;
+        current.texto = texto;
+        current.evolutionDate = evolutionDate;
+      
+        // ✅ atualiza somente updatedAt
+        current.updatedAt = now;
       } else {
-        // nova evolução
-        list.push({
+        evols.push({
           id: uid(),
-          pacienteId,
+          evolutionDate,     // opcional
           titulo,
           texto,
-          evolutionDate,
-          registeredAt: now,
-          updatedAt: now
+          registeredAt: now, // ✅ sempre hoje
+          updatedAt: now     // ✅ sempre hoje na criação
         });
       }
     
