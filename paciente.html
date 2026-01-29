@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Paciente • Rae Clínica Digital</title>
+  <title>Paciente • RAE Clínica Digital</title>
 
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; max-width: 900px; }
@@ -87,6 +87,23 @@
         <button id="btnEditar">Editar</button>
         <button id="btnPrescrever">💊 Prescrever (Memed)</button>
       </div>
+
+      <div class="card" id="evolCard" style="margin-top:16px;">
+        <div class="actions" style="justify-content: space-between;">
+          <div>
+            <strong>Evoluções</strong><br/>
+            <span class="label">Armazenamento local (por enquanto).</span>
+          </div>
+          <button id="btnNovaEvolucao">+ Nova evolução</button>
+        </div>
+      
+        <div id="evolEmpty" class="label" style="display:none; margin-top:12px;">
+          Nenhuma evolução ainda.
+        </div>
+
+        <div id="evolList" style="margin-top:12px;"></div>
+      </div>
+      
     </div>
   </div>
 
