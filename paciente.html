@@ -236,10 +236,10 @@
             ? `Evolução em ${escapeHtml(ev.evolutionDate)}`
             : `Evolução (mesmo dia do registro)`;
       
-          let registradaEm = "registrada em ?";
+          let registradaEm = "Registrada em ?";
           if (ev.registeredAt) {
             try {
-              registradaEm = `registrada em ${new Date(ev.registeredAt).toLocaleDateString("pt-BR")}`;
+              registradaEm = `Registrada em ${new Date(ev.registeredAt).toLocaleDateString("pt-BR")}`;
             } catch {}
           }
       
