@@ -7,11 +7,8 @@
 
   <style>
     * { box-sizing: border-box; }
-
     body { overflow-x: hidden; }
 
-    .card { overflow: hidden; }
-    
     body {
       font-family: Arial, sans-serif;
       margin: 24px;
@@ -25,6 +22,7 @@
       padding:16px;
       border-radius:10px;
       margin-top: 16px;
+      overflow: hidden;
     }
 
     label {
@@ -44,11 +42,10 @@
       font-size: 14px;
     }
 
-      textarea {
-        min-height: 260px;
-        resize: vertical;
-        box-sizing: border-box;
-      }
+    textarea {
+      min-height: 260px;
+      resize: vertical;
+    }
 
     .row {
       display:flex;
@@ -86,19 +83,23 @@
   </style>
 
   <script>
-    // 🔒 Verificação de login (RAE)
+    // 🔒 Verificação de login (RAE) - versão robusta (espera DOM existir)
     (async () => {
       try {
-        const r = await fetch(
-          "https://api.raeclinicadigital.com/auth/me",
-          { credentials: "include" }
-        );
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
         const j = await r.json().catch(() => ({}));
-        if (!j.ok) {
-          window.location.href = "/auth/login.html";
-          return;
+        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
+
+        const showApp = () => {
+          const el = document.getElementById("app");
+          if (el) el.style.display = "block";
+        };
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", showApp);
+        } else {
+          showApp();
         }
-        document.getElementById("app").style.display = "block";
       } catch {
         window.location.href = "/auth/login.html";
       }
@@ -115,53 +116,52 @@
     <div class="card">
       <label for="dataEvolucao">Data da evolução (dd/mm/aaaa)</label>
       <input id="dataEvolucao" placeholder="29/01/2026" />
-    
+
       <label for="titulo">Título (opcional)</label>
       <input id="titulo" placeholder="Ex: Consulta de seguimento" />
-    
+
       <label for="texto">Evolução</label>
       <textarea id="texto" placeholder="Digite a evolução clínica..."></textarea>
-    
+
       <div class="muted" id="info"></div>
-    
+
       <div class="row">
         <button id="saveBtn" type="button">💾 Salvar evolução</button>
         <button id="signBtn" type="button">✍️ Assinar</button>
       </div>
 
       <div class="muted" id="signedInfo" style="margin-top:10px;"></div>
+    </div>
 
     <div id="error"></div>
   </div>
 
   <script>
     const EVOL_KEY = "rae_evolucoes_v1";
-  
+
     function qs(k) { return new URLSearchParams(location.search).get(k); }
-  
+
     function loadMap() {
       try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); }
       catch { return {}; }
     }
-  
+
     function saveMap(map) {
       localStorage.setItem(EVOL_KEY, JSON.stringify(map));
     }
-  
+
     function showError(msg) {
       const e = document.getElementById("error");
       e.style.display = "block";
       e.textContent = msg;
     }
-  
+
     // --- parâmetros ---
     const pacienteId = qs("pacienteId");
     const evolucaoId = qs("id");       // se existir, é edição
     const mode = qs("mode");           // "view" para leitura
     const isViewMode = mode === "view";
-  
-    if (!pacienteId) showError("Falta ?pacienteId= na URL.");
-  
+
     // --- back link ---
     const back = document.getElementById("backLink");
     if (back) {
@@ -169,7 +169,7 @@
         ? `/paciente.html?id=${encodeURIComponent(pacienteId)}`
         : "/pacientes.html";
     }
-  
+
     // --- elementos do formulário ---
     const titleEl = document.getElementById("title");
     const dataEl = document.getElementById("dataEvolucao"); // opcional
@@ -179,140 +179,109 @@
     const saveBtn = document.getElementById("saveBtn");
     const signBtn = document.getElementById("signBtn");
     const signedInfo = document.getElementById("signedInfo");
-  
+
+    if (!pacienteId) showError("Falta ?pacienteId= na URL.");
+
     if (!titleEl || !dataEl || !tituloEl || !textoEl || !infoEl || !saveBtn || !signBtn || !signedInfo) {
       showError("IDs faltando no HTML (title, dataEvolucao, titulo, texto, info, saveBtn, signBtn, signedInfo).");
     }
-  
-    // garante que não submete form
-    saveBtn.type = "button";
-    signBtn.type = "button";
-  
+
     // --- carrega evolução se for edição ---
     const map = loadMap();
     const list = (map[pacienteId] || []).slice();
     let current = null;
-  
+
     if (evolucaoId) {
       current = list.find(e => e.id === evolucaoId) || null;
-      if (!current) {
-        showError("Evolução não encontrada para este paciente.");
-      }
+      if (!current) showError("Evolução não encontrada para este paciente.");
     }
-  
-    // util: aplicar modo somente leitura
+
     function applyReadOnly() {
       dataEl.disabled = true;
       tituloEl.disabled = true;
       textoEl.disabled = true;
+
       saveBtn.disabled = true;
       saveBtn.style.opacity = "0.6";
       saveBtn.style.cursor = "not-allowed";
     }
-  
+
     function applyWritable() {
       dataEl.disabled = false;
       tituloEl.disabled = false;
       textoEl.disabled = false;
+
       saveBtn.disabled = false;
       saveBtn.style.opacity = "1";
       saveBtn.style.cursor = "pointer";
     }
-  
-    // --- preencher tela ---
+
     const now = new Date().toISOString();
-  
+
     if (current) {
-      // Título muda conforme status
       const isSigned = !!current.signedAt;
       const isInactive = !!current.inactiveAt;
-  
+
       titleEl.textContent = isSigned ? "Evolução (assinada)" : "Editar evolução";
-  
-      dataEl.value = current.evolutionDate || ""; // opcional
+
+      dataEl.value = current.evolutionDate || "";
       tituloEl.value = current.titulo || "";
       textoEl.value = current.texto || "";
-  
+
       const reg = current.registeredAt
         ? new Date(current.registeredAt).toLocaleString("pt-BR")
         : new Date().toLocaleString("pt-BR");
-  
       infoEl.textContent = `Registrado em: ${reg}`;
-  
-      if (signedInfo) {
-        if (isSigned) {
-          const sAt = new Date(current.signedAt).toLocaleString("pt-BR");
-          signedInfo.textContent = `Assinada em: ${sAt}${isInactive ? " • INATIVA" : ""}`;
-        } else {
-          signedInfo.textContent = "";
-        }
-      }
-  
-      // Regras de bloqueio:
-      // - Se assinado → não edita
-      // - Se mode=view → não edita (mesmo não assinado)
-      if (isSigned || isViewMode) {
-        applyReadOnly();
+
+      if (isSigned) {
+        const sAt = new Date(current.signedAt).toLocaleString("pt-BR");
+        signedInfo.textContent = `Assinada em: ${sAt}${isInactive ? " • INATIVA" : ""}`;
       } else {
-        applyWritable();
+        signedInfo.textContent = "";
       }
-  
-      // Botão "Assinar"
-      // - só aparece se NÃO assinado e NÃO view mode
-      if (isSigned || isViewMode) {
-        signBtn.style.display = "none";
-      } else {
-        signBtn.style.display = "inline-block";
-      }
-  
+
+      if (isSigned || isViewMode) applyReadOnly();
+      else applyWritable();
+
+      signBtn.style.display = (isSigned || isViewMode) ? "none" : "inline-block";
     } else {
-      // Nova evolução
       titleEl.textContent = "Nova evolução";
-      dataEl.value = ""; // opcional
+      dataEl.value = "";
       tituloEl.value = "";
       textoEl.value = "";
       infoEl.textContent = `Registrado em: ${new Date().toLocaleString("pt-BR")}`;
       signedInfo.textContent = "";
-  
-      // Nova sempre editável
+
       applyWritable();
-      signBtn.style.display = "inline-block";
-  
-      // Em modo view sem id não faz sentido
-      if (isViewMode) {
-        applyReadOnly();
-        signBtn.style.display = "none";
-      }
+      signBtn.style.display = isViewMode ? "none" : "inline-block";
+      if (isViewMode) applyReadOnly();
     }
-  
-    // --- salvar ---
+
     saveBtn.addEventListener("click", () => {
       if (!pacienteId) return;
-  
-      // Se estiver assinado ou em view mode, não salva
+
       if (current?.signedAt || isViewMode) {
         alert("Esta evolução não pode ser editada.");
         return;
       }
-  
+
       const titulo = tituloEl.value.trim();
       const texto = textoEl.value.trim();
-      const evolutionDate = dataEl.value.trim() || null; // opcional
-  
+      const evolutionDate = dataEl.value.trim() || null;
+
       if (!texto) {
         alert("Informe o texto da evolução.");
         return;
       }
-  
+
       if (current) {
-        // mantém data do registro sempre a original
         if (!current.registeredAt) current.registeredAt = now;
-  
+
         current.titulo = titulo;
         current.texto = texto;
         current.evolutionDate = evolutionDate;
         current.updatedAt = new Date().toISOString();
-  
+
         const idx = list.findIndex(e => e.id === current.id);
         if (idx >= 0) list[idx] = current;
       } else {
@@ -321,50 +290,45 @@
           pacienteId,
           titulo,
           texto,
-          evolutionDate,            // opcional
-          registeredAt: now,        // sempre hoje
+          evolutionDate,
+          registeredAt: now,
           updatedAt: now,
           signedAt: null,
           inactiveAt: null
         });
       }
-  
+
       map[pacienteId] = list;
       saveMap(map);
-  
+
       window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
     });
-  
-    // --- assinar (somente aqui) ---
+
     signBtn.addEventListener("click", () => {
       if (!pacienteId) return;
-  
-      // Só assina se existir evolução salva (ou seja, se current existe)
-      // Se for nova, primeiro você salva, depois assina.
+
       if (!current) {
         alert("Para assinar, salve a evolução primeiro.");
         return;
       }
-  
+
       if (current.signedAt) {
         alert("Esta evolução já está assinada.");
         return;
       }
-  
+
       const ok = confirm("Ao assinar, esta evolução não poderá mais ser editada.\n\nDeseja continuar?");
       if (!ok) return;
-  
+
       current.signedAt = new Date().toISOString();
-      current.updatedAt = current.updatedAt || current.signedAt;
       if (!current.registeredAt) current.registeredAt = current.signedAt;
-  
+
       const idx = list.findIndex(e => e.id === current.id);
       if (idx >= 0) list[idx] = current;
-  
+
       map[pacienteId] = list;
       saveMap(map);
-  
-      // Recarrega em modo view (opcional) para garantir bloqueio visual
+
       window.location.href =
         `/evolucao-form.html?pacienteId=${encodeURIComponent(pacienteId)}&id=${encodeURIComponent(current.id)}&mode=view`;
     });
