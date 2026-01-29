@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Evolução • Rae Clínica Digital</title>
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 900px; }
+    label { display:block; margin-top: 12px; font-weight: bold; }
+    input, textarea { width: 100%; padding: 10px; margin-top: 6px; }
+    textarea { min-height: 220px; resize: vertical; }
+    button { margin-top: 14px; padding: 10px 12px; cursor:pointer; border-radius: 8px; border:1px solid #ddd; background:#fff; }
+    .row { display:flex; gap: 12px; flex-wrap: wrap; }
+    .row > div { flex: 1; min-width: 260px; }
+    #app { display:none; }
+    #error { display:none; background:#ffebee; border:1px solid #ef5350; color:#c62828; padding:12px; border-radius:10px; white-space: pre-wrap; }
+    a { color:#0b66c3; text-decoration:none; }
+  </style>
+
+  <script>
+    // 🔒 Proteção por login
+    (async () => {
+      try {
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
+        const j = await r.json().catch(() => ({}));
+        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
+
+        const showApp = () => {
+          const el = document.getElementById("app");
+          if (el) el.style.display = "block";
+        };
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", showApp);
+        } else {
+          showApp();
+        }
+      } catch {
+        window.location.href = "/auth/login.html";
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="app" style="display:none;">
+    <a id="backLink" href="/pacientes.html">← Voltar</a>
+    <h1 id="title">Nova evolução</h1>
+
+    <div id="error"></div>
+
+    <form id="form">
+      <div class="row">
+        <div>
+          <label>Data/Hora</label>
+          <input id="dt" />
+        </div>
+        <div>
+          <label>Título (opcional)</label>
+          <input id="titulo" placeholder="Ex.: Consulta de retorno" />
+        </div>
+      </div>
+
+      <label>Evolução</label>
+      <textarea id="texto" placeholder="Escreva aqui a evolução..."></textarea>
+
+      <button type="submit">Salvar evolução</button>
+    </form>
+  </div>
+
+  <script>
+    const PATIENTS_KEY = "rae_patients_v1";
+    const EVOL_KEY = "rae_evolucoes_v1";
+
+    function qs(k){ return new URLSearchParams(location.search).get(k); }
+    function nowLocal() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function uid() {
+      return "e_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+    function showError(msg) {
+      const e = document.getElementById("error");
+      e.style.display = "block";
+      e.textContent = msg;
+    }
+    function loadPatients() {
+      try { return JSON.parse(localStorage.getItem(PATIENTS_KEY) || "[]"); } catch { return []; }
+    }
+    function loadEvolMap() {
+      try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); } catch { return {}; }
+    }
+    function saveEvolMap(map) {
+      localStorage.setItem(EVOL_KEY, JSON.stringify(map));
+    }
+
+    const pacienteId = qs("pacienteId");
+    const evolucaoId = qs("id"); // se existir, é edição
+
+    if (!pacienteId) {
+      showError("Falta ?pacienteId=");
+    } else {
+      const patients = loadPatients();
+      const p = patients.find(x => x.id === pacienteId);
+
+      // voltar sempre para a ficha do paciente
+      document.getElementById("backLink").href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+
+      if (!p) {
+        showError("Paciente não encontrado.");
+      } else {
+        // título: Nova evolução ou Editar
+        if (evolucaoId) document.getElementById("title").textContent = "Editar evolução";
+
+        // preencher data/hora default
+        document.getElementById("dt").value = nowLocal();
+
+        // Se edição, carregar dados
+        const map = loadEvolMap();
+        const evols = map[pacienteId] || [];
+        const existing = evolucaoId ? evols.find(e => e.id === evolucaoId) : null;
+
+        if (existing) {
+          document.getElementById("dt").value = existing.dt || nowLocal();
+          document.getElementById("titulo").value = existing.titulo || "";
+          document.getElementById("texto").value = existing.texto || "";
+        }
+
+        document.getElementById("form").addEventListener("submit", (ev) => {
+          ev.preventDefault();
+
+          const dt = document.getElementById("dt").value.trim();
+          const titulo = document.getElementById("titulo").value.trim();
+          const texto = document.getElementById("texto").value.trim();
+
+          if (!dt) return showError("Data/hora é obrigatória.");
+          if (!texto) return showError("Texto da evolução é obrigatório.");
+
+          const newItem = {
+            id: existing?.id || uid(),
+            dt,
+            titulo,
+            texto,
+            updatedAt: new Date().toISOString()
+          };
+
+          const next = (map[pacienteId] || []).filter(e => e.id !== newItem.id);
+          next.push(newItem);
+          map[pacienteId] = next;
+
+          saveEvolMap(map);
+
+          window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+        });
+      }
+    }
+  </script>
+</body>
+</html>
