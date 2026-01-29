@@ -126,6 +126,19 @@
   </div>
 
   <script>
+    const pacienteId = new URLSearchParams(location.search).get("pacienteId");
+    const back = document.getElementById("backLink");
+  
+    if (back) {
+      if (pacienteId) {
+        back.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+      } else {
+        back.href = "/pacientes.html";
+      }
+    }
+  </script>
+  
+  <script>
     const EVOL_KEY = "rae_evolucoes_v1";
     
     function loadMap() {
