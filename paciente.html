@@ -3,93 +3,120 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Paciente</title>
-
+  <title>Pacientes • Rae Clínica Digital</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; }
-    .card { border: 1px solid #eee; padding: 16px; border-radius: 8px; max-width: 720px; }
-    label { display:block; margin-top: 10px; }
-    input { width: 100%; padding: 8px; margin-top: 4px; }
-    button { margin-top: 14px; padding: 10px 14px; cursor: pointer; }
-    #app { display:none; }
-    small { color: #666; }
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 900px; }
+    a { color: #0b66c3; text-decoration: none; }
+    .row { display:flex; gap: 12px; align-items:center; justify-content: space-between; }
+    .card { border:1px solid #eee; padding:16px; border-radius:10px; margin-top: 16px; }
+    button { padding:10px 12px; cursor:pointer; }
+    input { padding:10px; width: 100%; max-width: 420px; }
+    .list { margin-top: 12px; }
+    .item { padding: 12px; border-top: 1px solid #eee; display:flex; justify-content: space-between; gap: 12px; }
+    .muted { color:#666; font-size: 13px; }
   </style>
-
-  <script>
-    (async () => {
-      try {
-        const r = await fetch("https://api.raeclinicadigital.com/auth/me", {
-          credentials: "include"
-        });
-        const j = await r.json().catch(() => ({}));
-        if (!j.ok) {
-          window.location.href = "/auth/login.html";
-          return;
-        }
-  
-        const showApp = () => {
-          const el = document.getElementById("app");
-          if (el) el.style.display = "block";
-        };
-  
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", showApp);
-        } else {
-          showApp();
-        }
-      } catch {
-        window.location.href = "/auth/login.html";
-      }
-    })();
-  </script>
 </head>
-
 <body>
-  <div id="app">
-    <a href="/index.html">← Voltar</a>
-    <h1>Ficha do paciente</h1>
+  <a href="/index.html">← Voltar</a>
+  <h1>Pacientes</h1>
 
-    <div class="card">
-      <p><small>Placeholder: por enquanto, manual. Depois você pode buscar do seu backend.</small></p>
+  <div class="row">
+    <input id="search" placeholder="Buscar por nome ou CPF…" />
+    <button id="newBtn">+ Novo paciente</button>
+  </div>
 
-      <label>Nome</label>
-      <input id="nome" value="Paciente Teste" />
+  <div class="card">
+    <div class="row">
+      <div>
+        <strong>Lista</strong><br/>
+        <span class="muted">Armazenamento local no navegador (por enquanto).</span>
+      </div>
+      <button id="exportBtn">Exportar JSON</button>
+    </div>
 
-      <label>Telefone</label>
-      <input id="telefone" value="11999999999" />
-
-      <label>CPF</label>
-      <input id="cpf" value="12345678900" />
-
-      <label>Nascimento (dd/mm/aaaa)</label>
-      <input id="nascimento" value="01/01/1990" />
-
-      <label>ID do paciente (interno)</label>
-      <input id="pacienteId" value="demo-001" />
-
-      <button id="btnPrescrever">💊 Prescrever (Memed)</button>
+    <div id="list" class="list"></div>
+    <div id="empty" class="muted" style="display:none;margin-top:10px;">
+      Nenhum paciente ainda. Clique em “Novo paciente”.
     </div>
   </div>
 
   <script>
-    const PRESCRITOR_ID = "30011eb5-00e8-4cb0-8c3a-f9ee64567dfd";
+    const KEY = "rae_patients_v1";
 
-    document.getElementById("btnPrescrever")?.addEventListener("click", () => {
-      const nome = encodeURIComponent(document.getElementById("nome").value.trim());
-      const telefone = encodeURIComponent(document.getElementById("telefone").value.trim());
-      const cpf = encodeURIComponent(document.getElementById("cpf").value.trim());
-      const nascimento = encodeURIComponent(document.getElementById("nascimento").value.trim());
-      const pacienteId = encodeURIComponent(document.getElementById("pacienteId").value.trim());
+    function loadPatients() {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return [];
+      try { return JSON.parse(raw) || []; } catch { return []; }
+    }
 
-      const url = `/prescricao.html?prescritorId=${encodeURIComponent(PRESCRITOR_ID)}`
-        + `&nome=${nome}`
-        + `&telefone=${telefone}`
-        + `&cpf=${cpf}`
-        + `&nascimento=${nascimento}`
-        + `&pacienteId=${pacienteId}`;
+    function savePatients(patients) {
+      localStorage.setItem(KEY, JSON.stringify(patients));
+    }
 
-      window.location.href = url;
+    function fmtCpf(cpf) {
+      const s = (cpf || "").replace(/\D/g, "");
+      if (s.length !== 11) return cpf || "";
+      return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    }
+
+    function render() {
+      const patients = loadPatients();
+      const q = (document.getElementById("search").value || "").toLowerCase().trim();
+      const filtered = patients.filter(p => {
+        const hay = `${p.nome||""} ${p.cpf||""}`.toLowerCase();
+        return !q || hay.includes(q);
+      });
+
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      document.getElementById("empty").style.display = filtered.length ? "none" : "block";
+
+      filtered
+        .sort((a,b) => (a.nome||"").localeCompare(b.nome||""))
+        .forEach(p => {
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <div>
+              <strong>${p.nome || "(sem nome)"}</strong><br/>
+              <span class="muted">CPF: ${fmtCpf(p.cpf)} • Nasc: ${p.nascimento || ""}</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button data-edit="${p.id}">Editar</button>
+              <button data-open="${p.id}">Abrir</button>
+            </div>
+          `;
+          list.appendChild(div);
+        });
+    }
+
+    document.getElementById("search").addEventListener("input", render);
+
+    document.getElementById("newBtn").addEventListener("click", () => {
+      window.location.href = "/paciente-form.html";
     });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const patients = loadPatients();
+      const blob = new Blob([JSON.stringify(patients, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pacientes.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.addEventListener("click", (e) => {
+      const editId = e.target?.getAttribute?.("data-edit");
+      const openId = e.target?.getAttribute?.("data-open");
+      if (editId) window.location.href = `/paciente-form.html?id=${encodeURIComponent(editId)}`;
+      if (openId) window.location.href = `/paciente.html?id=${encodeURIComponent(openId)}`;
+    });
+
+    // Se não existir página paciente.html ainda, vamos criar no próximo passo.
+    render();
   </script>
 </body>
 </html>
