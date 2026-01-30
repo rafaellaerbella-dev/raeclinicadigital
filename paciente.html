@@ -16,6 +16,74 @@
     .actions { display:flex; gap:10px; flex-wrap: wrap; margin-top: 12px; }
     #error { background:#ffebee; border:1px solid #ef5350; color:#c62828; padding:12px; border-radius:10px; display:none; }
     a { color:#0b66c3; text-decoration:none; }
+    
+        /* Timeline */
+    .timeline-item{
+      display:flex;
+      gap:14px;
+      padding:14px 0;
+      border-top:1px solid #eee;
+    }
+
+    .timeline-date{
+      width:110px;
+      flex:0 0 110px;
+      text-align:right;
+      font-size:13px;
+      color:#666;
+      padding-top:2px;
+    }
+
+    .timeline-rail{
+      width:14px;
+      flex:0 0 14px;
+      position:relative;
+    }
+
+    .timeline-rail::before{
+      content:"";
+      position:absolute;
+      top:0;
+      bottom:0;
+      left:6px;
+      width:2px;
+      background:#e6e6e6;
+    }
+
+    .timeline-dot{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      border:2px solid #bbb;
+      background:#fff;
+      position:absolute;
+      top:4px;
+      left:1px;
+    }
+
+    .timeline-body{
+      flex:1;
+      min-width:0;
+    }
+
+    .badge{
+      display:inline-block;
+      font-size:12px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid #ddd;
+      color:#555;
+      margin-left:8px;
+    }
+
+    .badge.signed{ color:#2e7d32; border-color:#cfe6d3; }
+    .badge.inactive{ color:#c62828; border-color:#f3c6c6; }
+
+    .strike{
+      text-decoration: line-through;
+      opacity: 0.75;
+    }
+    
   </style>
 
   <script>
@@ -208,90 +276,94 @@
       function renderEvolucoes(pacienteId) {
         const map = loadEvolMap();
         const evols = (map[pacienteId] || []).slice();
-      
+
         // Mais recente primeiro
         evols.sort((a, b) => {
           const aa = a.updatedAt || a.signedAt || a.registeredAt || "";
           const bb = b.updatedAt || b.signedAt || b.registeredAt || "";
           return bb.localeCompare(aa);
         });
-      
+
         const list = document.getElementById("evolList");
         const empty = document.getElementById("evolEmpty");
-      
+
         list.innerHTML = "";
         empty.style.display = evols.length ? "none" : "block";
-      
+
         evols.forEach(ev => {
           const isSigned = !!ev.signedAt;
           const isInactive = !!ev.inactiveAt;
-      
-          // Data da consulta (principal)
+
+          // Data principal da timeline = data da consulta (se existir) senão dia do registro
           const regDate = ev.registeredAt ? formatDateBR(ev.registeredAt) : "";
-          const consultaDate = ev.evolutionDate ? ev.evolutionDate : regDate;
-      
-          // Se a consultaDate for diferente do registro, mostrar "(Registrado em ...)"
-          const diff = (ev.evolutionDate && regDate && ev.evolutionDate !== regDate)
-            ? ` (Registrado em ${regDate})`
+          const consultDate = ev.evolutionDate ? ev.evolutionDate : regDate;
+
+          // Mostrar "Registrado em..." só se retroativo (datas diferentes)
+          const showRegistered = (ev.evolutionDate && regDate && ev.evolutionDate !== regDate)
+            ? `Registrado em ${regDate}`
             : "";
-      
-          const linhaData = `${escapeHtml(consultaDate || "")}${diff}`;
-      
-          const tituloHtml = ev.titulo
-            ? `<div style="font-weight:600;">${escapeHtml(ev.titulo)}</div>`
-            : "";
-      
-          const tituloInline = ev.titulo ? ` (${escapeHtml(ev.titulo)})` : "";
-          const linhaPrincipal = `Evolução${tituloInline}`;
-      
-          // Status
-          const statusBadge = isInactive
-            ? `<span class="label" style="color:#c62828; font-weight:600; margin-left:8px;">INATIVA</span>`
+
+          // Linha principal
+          const titleInline = ev.titulo ? ` (${escapeHtml(ev.titulo)})` : "";
+          const linhaPrincipal = `Evolução${titleInline}`;
+
+          // Badge de status
+          const badge = isInactive
+            ? `<span class="badge inactive">INATIVA</span>`
             : isSigned
-              ? `<span class="label" style="color:#2e7d32; font-weight:600; margin-left:8px;">ASSINADA</span>`
+              ? `<span class="badge signed">ASSINADA</span>`
               : "";
-      
-          // Riscado só na lista
-          const strikeStyle = isInactive ? "text-decoration: line-through; opacity: 0.75;" : "";
-      
-          // Botões conforme regra
+
+          // Riscado só na lista (inativa)
+          const strikeClass = isInactive ? "strike" : "";
+
+          // Botões conforme regras
           let buttons = "";
           if (!isSigned) {
-            // rascunho
             buttons = `
               <button data-edit-evol="${escapeHtml(ev.id)}">Editar</button>
               <button data-del-evol="${escapeHtml(ev.id)}">Excluir</button>
             `;
-          } else if (isSigned && !isInactive) {
-            // assinado ativo
+          } else if (!isInactive) {
             buttons = `
               <button data-open-evol="${escapeHtml(ev.id)}">Abrir</button>
               <button data-inactivate-evol="${escapeHtml(ev.id)}">Inativar</button>
             `;
           } else {
-            // assinado e inativo
-            buttons = `
-              <button data-open-evol="${escapeHtml(ev.id)}">Abrir</button>
-            `;
+            buttons = `<button data-open-evol="${escapeHtml(ev.id)}">Abrir</button>`;
           }
-      
+
           const div = document.createElement("div");
-          div.style.borderTop = "1px solid #eee";
-          div.style.padding = "12px 0";
-      
           div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
-              <div style="flex:1; ${strikeStyle}">
-                ${tituloHtml}
-                <div class="label">${linhaData}${statusBadge}</div>
-                <div style="margin-top:6px; font-weight:600;">${linhaPrincipal}</div>
+            <div class="timeline-item">
+              <div class="timeline-date">${escapeHtml(consultDate || "")}</div>
+
+              <div class="timeline-rail">
+                <span class="timeline-dot"></span>
               </div>
-              <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                ${buttons}
+
+              <div class="timeline-body ${strikeClass}">
+                <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-weight:600;">
+                      ${linhaPrincipal} ${badge}
+                    </div>
+
+                    ${
+                      showRegistered
+                        ? `<div class="label" style="margin-top:4px;">${escapeHtml(showRegistered)}</div>`
+                        : ""
+                    }
+                  </div>
+
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    ${buttons}
+                  </div>
+                </div>
               </div>
             </div>
           `;
-      
+
           list.appendChild(div);
         });
       }
