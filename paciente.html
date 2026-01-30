@@ -37,10 +37,10 @@
     .timeline-rail{
       width:14px;
       flex:0 0 14px;
-      position:relative;
       display:flex;
       justify-content:center;
-      align-items:center; /* 🔑 centro vertical real */
+      align-items:center;
+      position:relative;
     }
 
     .timeline-dot{
@@ -49,6 +49,17 @@
       border-radius:50%;
       border:2px solid #bbb;
       background:#fff;
+      z-index:2;
+    }
+
+    /* linha curta acima e abaixo da bolinha */
+    .timeline-rail::before{
+      content:"";
+      position:absolute;
+      top:0;
+      bottom:0;
+      width:2px;
+      background:#e6e6e6;
     }
 
     .timeline-body{
