@@ -302,9 +302,19 @@
 
         // Mais recente primeiro
         evols.sort((a, b) => {
-          const aa = a.updatedAt || a.signedAt || a.registeredAt || "";
-          const bb = b.updatedAt || b.signedAt || b.registeredAt || "";
-          return bb.localeCompare(aa);
+          const da =
+            a.evolutionDate ||
+            (a.registeredAt ? a.registeredAt.slice(0, 10) : "") ||
+            a.updatedAt ||
+            "";
+
+          const db =
+            b.evolutionDate ||
+            (b.registeredAt ? b.registeredAt.slice(0, 10) : "") ||
+            b.updatedAt ||
+            "";
+
+          return db.localeCompare(da);
         });
 
         const list = document.getElementById("evolList");
@@ -425,11 +435,21 @@
       
         // Excluir (somente rascunho) — com confirmação
         if (delId) {
-          const ok = confirm("Excluir esta evolução? Esta ação não pode ser desfeita.");
-          if (!ok) return;
-      
           const map = loadEvolMap();
-          map[id] = (map[id] || []).filter(ev => ev.id !== delId);
+          const evols = map[id] || [];
+          const ev = evols.find(e => e.id === delId);
+
+          if (!ev) return;
+
+          if (ev.signedAt) {
+            alert("Evoluções assinadas não podem ser excluídas. Use inativar.");
+            return;
+          }
+
+          const ok = confirm("Excluir esta evolução rascunho? Esta ação não pode ser desfeita.");
+          if (!ok) return;
+
+          map[id] = evols.filter(e => e.id !== delId);
           saveEvolMap(map);
           renderEvolucoes(id);
           return;
