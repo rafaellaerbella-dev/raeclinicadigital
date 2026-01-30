@@ -287,6 +287,13 @@
       function formatDateBR(iso) {
         try { return new Date(iso).toLocaleDateString("pt-BR"); } catch { return ""; }
       }
+
+      function typeLabel(t) {
+        if (t === "primeira_consulta") return "Primeira consulta";
+        if (t === "retorno") return "Retorno";
+        if (t === "intercorrencia") return "Intercorrência";
+        return "Evolução";
+      }
       
       function monthYearLabelBR(ddmmyyyy) {
         const [dd, mm, yyyy] = (ddmmyyyy || "").split("/");
@@ -340,8 +347,9 @@
             : "";
 
           // Linha principal
+          const base = typeLabel(ev.type);
           const titleInline = ev.titulo ? ` (${escapeHtml(ev.titulo)})` : "";
-          const linhaPrincipal = `Evolução${titleInline}`;
+          const linhaPrincipal = `${base}${titleInline}`;
 
           // Badge de status
           const badge = isInactive
