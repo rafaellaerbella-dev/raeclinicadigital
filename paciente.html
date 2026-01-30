@@ -40,7 +40,7 @@
       flex:0 0 14px;
       display:flex;
       justify-content:center;
-      align-items:flex-start;
+      align-items:center;
       position:relative;
     }
 
@@ -57,8 +57,8 @@
     .timeline-rail::before{
       content:"";
       position:absolute;
-      top:0;
-      bottom:50%;      /* puxa a linha para o próximo item */
+      top:-14px;
+      bottom:-14px;      /* puxa a linha para o próximo item */
       left:50%;
       transform: translateX(-50%);
       width:2px;
@@ -374,7 +374,7 @@
               </div>
 
               <div class="timeline-body">
-                <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+                <div style="display:flex; gap:12px; align-items:center;">
                   
                   <div class="${strikeClass}" style="flex:1; min-width:0;">
                     <div style="font-weight:600;">
@@ -384,7 +384,7 @@
                     ${showRegistered ? `<div class="label" style="margin-top:4px;">${escapeHtml(showRegistered)}</div>` : ""}
                   </div>
 
-                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <div style="display:flex; gap:8px; margin-left:auto;">
                     ${buttons}
                   </div>
 
