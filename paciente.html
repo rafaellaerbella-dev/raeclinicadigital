@@ -17,7 +17,7 @@
     #error { background:#ffebee; border:1px solid #ef5350; color:#c62828; padding:12px; border-radius:10px; display:none; }
     a { color:#0b66c3; text-decoration:none; }
     
-        /* Timeline */
+    /* Timeline */
     .timeline-item{
       display:flex;
       gap:14px;
@@ -57,8 +57,9 @@
       border:2px solid #bbb;
       background:#fff;
       position:absolute;
-      top:4px;
-      left:1px;
+      top:6px;              /* alinha verticalmente com o texto */
+      left:50%;
+      transform: translateX(-50%);
     }
 
     .timeline-body{
@@ -342,23 +343,21 @@
                 <span class="timeline-dot"></span>
               </div>
 
-              <div class="timeline-body ${strikeClass}">
+              <div class="timeline-body">
                 <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
-                  <div style="flex:1; min-width:0;">
+                  
+                  <div class="${strikeClass}" style="flex:1; min-width:0;">
                     <div style="font-weight:600;">
                       ${linhaPrincipal} ${badge}
                     </div>
 
-                    ${
-                      showRegistered
-                        ? `<div class="label" style="margin-top:4px;">${escapeHtml(showRegistered)}</div>`
-                        : ""
-                    }
+                    ${showRegistered ? `<div class="label" style="margin-top:4px;">${escapeHtml(showRegistered)}</div>` : ""}
                   </div>
 
                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     ${buttons}
                   </div>
+
                 </div>
               </div>
             </div>
