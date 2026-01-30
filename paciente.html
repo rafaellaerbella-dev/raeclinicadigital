@@ -38,6 +38,10 @@
       width:14px;
       flex:0 0 14px;
       position:relative;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding-top:6px; /* controla a altura do dot */
     }
 
     .timeline-rail::before{
@@ -45,7 +49,8 @@
       position:absolute;
       top:0;
       bottom:0;
-      left:6px;
+      left:50%;
+      transform: translateX(-50%);
       width:2px;
       background:#e6e6e6;
     }
@@ -56,11 +61,7 @@
       border-radius:50%;
       border:2px solid #bbb;
       background:#fff;
-      position:absolute;
-      top:6px;              /* alinha verticalmente com o texto */
-      left:50%;
-      transform: translateX(-50%);
-    }
+    } 
 
     .timeline-body{
       flex:1;
@@ -274,6 +275,14 @@
         try { return new Date(iso).toLocaleDateString("pt-BR"); } catch { return ""; }
       }
       
+      function monthYearLabelBR(ddmmyyyy) {
+        const [dd, mm, yyyy] = (ddmmyyyy || "").split("/");
+        const meses = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+        const m = parseInt(mm, 10);
+        if (!yyyy || !m || m < 1 || m > 12) return "";
+        return `${meses[m - 1]} ${yyyy}`;
+      }
+      
       function renderEvolucoes(pacienteId) {
         const map = loadEvolMap();
         const evols = (map[pacienteId] || []).slice();
@@ -291,6 +300,8 @@
         list.innerHTML = "";
         empty.style.display = evols.length ? "none" : "block";
 
+        let lastGroup = "";
+        
         evols.forEach(ev => {
           const isSigned = !!ev.signedAt;
           const isInactive = !!ev.inactiveAt;
@@ -298,6 +309,17 @@
           // Data principal da timeline = data da consulta (se existir) senão dia do registro
           const regDate = ev.registeredAt ? formatDateBR(ev.registeredAt) : "";
           const consultDate = ev.evolutionDate ? ev.evolutionDate : regDate;
+          
+          const groupLabel = monthYearLabelBR(consultaDate);
+            if (groupLabel && groupLabel !== lastGroup) {
+              const header = document.createElement("div");
+              header.className = "muted";
+              header.style.marginTop = "14px";
+              header.style.fontWeight = "600";
+              header.textContent = groupLabel;
+              list.appendChild(header);
+              lastGroup = groupLabel;
+            }
 
           // Mostrar "Registrado em..." só se retroativo (datas diferentes)
           const showRegistered = (ev.evolutionDate && regDate && ev.evolutionDate !== regDate)
