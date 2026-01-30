@@ -40,8 +40,8 @@
       position:relative;
       display:flex;
       justify-content:center;
-      align-items:flex-start;
-      padding-top:6px; /* controla a altura do dot */
+      align-items:center;   /* 🔑 centraliza */
+      padding-top:0;        /* 🔑 remove deslocamento manual */
     }
 
     .timeline-rail::before{
@@ -308,18 +308,18 @@
 
           // Data principal da timeline = data da consulta (se existir) senão dia do registro
           const regDate = ev.registeredAt ? formatDateBR(ev.registeredAt) : "";
-          const consultDate = ev.evolutionDate ? ev.evolutionDate : regDate;
-          
+          const consultDate = ev.evolutionDate ?          ev.evolutionDate : regDate;
+
           const groupLabel = monthYearLabelBR(consultDate);
-            if (groupLabel && groupLabel !== lastGroup) {
-              const header = document.createElement("div");
-              header.className = "muted";
-              header.style.marginTop = "14px";
-              header.style.fontWeight = "600";
-              header.textContent = groupLabel;
-              list.appendChild(header);
-              lastGroup = groupLabel;
-            }
+          if (groupLabel && groupLabel !== lastGroup) {
+            const header = document.createElement("div");
+            header.className = "muted";
+            header.style.marginTop = "14px";
+            header.style.fontWeight = "600";
+            header.textContent = groupLabel;
+            list.appendChild(header);
+            lastGroup = groupLabel;
+          }
 
           // Mostrar "Registrado em..." só se retroativo (datas diferentes)
           const showRegistered = (ev.evolutionDate && regDate && ev.evolutionDate !== regDate)
