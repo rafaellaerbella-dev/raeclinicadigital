@@ -67,8 +67,19 @@
     .timeline-rail::before{
       content:"";
       position:absolute;
-      top:12px;
-      bottom:-14px;      /* puxa a linha para o próximo item */
+      top:0;
+      bottom:50%;      /* puxa a linha para o próximo item */
+      left:50%;
+      transform: translateX(-50%);
+      width:2px;
+      background:#e6e6e6;
+    }
+    
+    .timeline-rail::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      bottom:-14px;
       left:50%;
       transform: translateX(-50%);
       width:2px;
