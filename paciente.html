@@ -66,9 +66,10 @@
       .timeline-rail::before{
         content:"";
         position:absolute;
-        top:0;
-        bottom:0;
+        top:50%;
+        transform: translate(-50%, -50%);
         width:2px;
+        height:28px;      /* ← controla o tamanho da linha */
         background:#e6e6e6;
       }
 
