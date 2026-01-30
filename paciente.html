@@ -174,14 +174,14 @@
       <div class="card" id="evolCard" style="margin-top:16px;">
         <div class="actions" style="justify-content: space-between;">
           <div>
-            <strong>Evoluções</strong><br/>
+            <strong>Atendimentos</strong><br/>
             <span class="label">Armazenamento local (por enquanto).</span>
           </div>
-          <button id="btnNovaEvolucao">+ Nova evolução</button>
+          <button id="btnNovaEvolucao">+ Novo Atendimento</button>
         </div>
       
         <div id="evolEmpty" class="label" style="display:none; margin-top:12px;">
-          Nenhuma evolução ainda.
+          Nenhum Atendimento ainda.
         </div>
 
         <div id="evolList" style="margin-top:12px;"></div>
@@ -290,9 +290,9 @@
 
       function typeLabel(t) {
         if (t === "primeira_consulta") return "Primeira consulta";
-        if (t === "retorno") return "Retorno";
+        if (t === "evolução") return "Evolução";
         if (t === "intercorrencia") return "Intercorrência";
-        return "Evolução";
+        return "Atendimento";
       }
       
       function monthYearLabelBR(ddmmyyyy) {
@@ -440,11 +440,11 @@
           if (!ev) return;
 
           if (ev.signedAt) {
-            alert("Evoluções assinadas não podem ser excluídas. Use inativar.");
+            alert("Registros assinados não podem ser excluídos. Use inativar.");
             return;
           }
 
-          const ok = confirm("Excluir esta evolução rascunho? Esta ação não pode ser desfeita.");
+          const ok = confirm("Excluir este registro rascunho? Esta ação não pode ser desfeita.");
           if (!ok) return;
 
           map[id] = evols.filter(e => e.id !== delId);
@@ -463,7 +463,7 @@
 
           // Só permite inativar se assinada
           if (!ev.signedAt) {
-            alert("Só é possível inativar uma evolução assinada.");
+            alert("Só é possível inativar um registro assinado.");
             return;
           }
 
