@@ -310,7 +310,7 @@
           const regDate = ev.registeredAt ? formatDateBR(ev.registeredAt) : "";
           const consultDate = ev.evolutionDate ? ev.evolutionDate : regDate;
           
-          const groupLabel = monthYearLabelBR(consultaDate);
+          const groupLabel = monthYearLabelBR(consultDate);
             if (groupLabel && groupLabel !== lastGroup) {
               const header = document.createElement("div");
               header.className = "muted";
@@ -389,13 +389,8 @@
         });
       }
       
-      // Nova evolução (sempre rascunho)
-      document.getElementById("btnNovaEvolucao")?.addEventListener("click", () => {
-        window.location.href = `/evolucao-form.html?pacienteId=${encodeURIComponent(id)}`;
-      });
-      
       // Click handler (Abrir/Editar/Excluir/Inativar)
-      document.getElementById("evolList")?.addEventListener("click", (e) => {
+                            document.getElementById("evolList")?.addEventListener("click", (e) => {
         const openId = e.target?.getAttribute?.("data-open-evol");
         const editId = e.target?.getAttribute?.("data-edit-evol");
         const delId = e.target?.getAttribute?.("data-del-evol");
