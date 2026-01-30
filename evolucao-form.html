@@ -41,6 +41,18 @@
       font-family: inherit;
       font-size: 14px;
     }
+    
+    select{
+      width:100%;
+      max-width:100%;
+      padding:10px;
+      margin-top:6px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      font-family:inherit;
+      font-size:14px;
+      background:#fff;
+    }
 
     textarea { min-height: 260px; resize: vertical; }
 
@@ -139,8 +151,12 @@
       <label for="dataEvolucao">Data da evolução (dd/mm/aaaa)</label>
       <input id="dataEvolucao" placeholder="29/01/2026" />
 
-      <label for="titulo">Tipo/Título (opcional)</label>
-      <input id="titulo" placeholder="Ex: Consulta de seguimento" />
+      <label for="tipo">Tipo</label>
+      <select id="tipo">
+        <option value="primeira_consulta">Primeira consulta</option>
+        <option value="retorno">Retorno</option>
+        <option value="intercorrencia">Intercorrência</option>
+      </select>
 
       <label for="texto">Evolução</label>
       <textarea id="texto" placeholder="Digite a evolução clínica..."></textarea>
@@ -215,7 +231,7 @@
 
     const editCardEl = document.getElementById("editCard");
     const dataEl = document.getElementById("dataEvolucao");
-    const tituloEl = document.getElementById("titulo");
+    const tipoEl = document.getElementById("tipo");
     const textoEl = document.getElementById("texto");
     const infoEl = document.getElementById("info");
     const signedInfoEl = document.getElementById("signedInfo");
@@ -345,25 +361,32 @@
         ? `Assinada em: ${new Date(current.signedAt).toLocaleString("pt-BR")}` + (isInactive ? " • INATIVA" : "")
         : "";
 
-      if (isViewMode || isSigned) {
-        titleEl.textContent = "Evolução";
-        showView(current);
-        saveBtn.style.display = "none";
-        signBtn.style.display = "none";
-      } else {
-        titleEl.textContent = "Editar evolução";
-        showEdit();
-        dataEl.value = current.evolutionDate || "";
-        tituloEl.value = current.titulo || "";
-        textoEl.value = current.texto || "";
-        saveBtn.style.display = "inline-block";
-        signBtn.style.display = "inline-block";
-      }
+    if (isViewMode || isSigned) {
+      titleEl.textContent = "Evolução";
+      showView(current);
+      saveBtn.style.display = "none";
+      signBtn.style.display = "none";
+    } else {
+      titleEl.textContent = "Editar evolução";
+      showEdit();
+
+      dataEl.value = current.evolutionDate || "";
+      tipoEl.value = current.type || "retorno";   // ✅ 1.3 preencher dropdown
+      textoEl.value = current.texto || "";
+
+      saveBtn.style.display = "inline-block";
+      signBtn.style.display = "inline-block";
+    }
     } else {
       titleEl.textContent = "Nova evolução";
       showEdit();
       infoEl.textContent = `Registrado em: ${new Date().toLocaleString("pt-BR")}`;
       signedInfoEl.textContent = "";
+
+      dataEl.value = "";
+      tipoEl.value = "retorno";   // ✅ default que você preferir
+      textoEl.value = "";
+
       saveBtn.style.display = "inline-block";
       signBtn.style.display = "inline-block";
     }
@@ -371,12 +394,16 @@
     /* ========= save (draft) ========= */
     saveBtn.addEventListener("click", () => {
       const texto = textoEl.value.trim();
-      if (!texto) { alert("Informe o texto da evolução."); return; }
+      if (!texto) {
+        alert("Informe o texto da evolução.");
+        return;
+      }
 
-      const evolutionDate = dataEl.value.trim() || null;
+      const evolutionDate = dataEl.value.trim() || null; // opcional
+      const type = (tipoEl.value || "retorno");          // ✅ 1.4 salvar tipo
 
       if (current) {
-        current.titulo = tituloEl.value.trim();
+        current.type = type;                              // ✅
         current.texto = texto;
         current.evolutionDate = evolutionDate;
         current.updatedAt = new Date().toISOString();
@@ -384,7 +411,7 @@
         list.push({
           id: crypto.randomUUID(),
           pacienteId,
-          titulo: tituloEl.value.trim(),
+          type,                                           // ✅
           texto,
           evolutionDate,
           registeredAt: now,
@@ -400,7 +427,7 @@
       saveMap(map);
       window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
     });
-
+    
     /* ========= sign ========= */
     signBtn.addEventListener("click", () => {
       if (!current) {
