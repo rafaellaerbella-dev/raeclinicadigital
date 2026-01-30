@@ -45,33 +45,33 @@
     }
 
     .timeline-rail{
-       width:14px;
-        flex:0 0 14px;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        position:relative;
-      }
+      width:14px;
+      flex:0 0 14px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      position:relative;
+    }
 
-      .timeline-dot{
-        width:12px;
-        height:12px;
-        border-radius:50%;
-        border:2px solid #bbb;
-        background:#fff;
-        z-index:2;
-      }
+    .timeline-dot{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      border:2px solid #bbb;
+      background:#fff;
+      z-index:2;
+    }
 
-      /* linha curta acima e abaixo da bolinha */
-      .timeline-rail::before{
-        content:"";
-        position:absolute;
-        top:50%;
-        transform: translate(-50%, -50%);
-        width:2px;
-        height:28px;      /* ← controla o tamanho da linha */
-        background:#e6e6e6;
-      }
+    /* linha curta acima e abaixo da bolinha */
+    .timeline-rail::before{
+      content:"";
+      position:absolute;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width:2px;
+      height:28px;      /* ← controla o tamanho da linha */
+      background:#e6e6e6;
+    }
 
     .badge{
       display:inline-block;
