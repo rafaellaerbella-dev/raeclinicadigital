@@ -130,15 +130,20 @@
         <button id="addAnnotationBtn" type="button">📝 Anotar</button>
       </div>
 
-      <div id="annotationBlock" style="display:none; margin-top:12px;">
+      <div id="annotationBlock" style="display:none; margin-top:12px;"> 
         <label for="annotationText">Anotação</label>
         <textarea id="annotationText" placeholder="Adicionar anotação complementar..." style="min-height:120px;"></textarea>
         <div class="row">
           <button id="saveAnnotationBtn" type="button">➕ Salvar anotação</button>
         </div>
-      </div>
+      </div> 
 
       <!-- (lista de anotações fica para o passo B, se você quiser) -->
+      <div id="annotationsList" style="margin-top:16px; display:none;">
+        <div class="muted" style="font-weight:600;">Anotações</div>
+        <div id="annotationsItems" style="margin-top:10px;"></div>
+      </div>
+    
     </div>
 
     <!-- ===== EDIT MODE ===== -->
@@ -221,6 +226,8 @@
     const annotationBlock = document.getElementById("annotationBlock");
     const annotationTextEl = document.getElementById("annotationText");
     const saveAnnotationBtn = document.getElementById("saveAnnotationBtn");
+    const annotationsList = document.getElementById("annotationsList");
+    const annotationsItems = document.getElementById("annotationsItems");
 
     const editCardEl = document.getElementById("editCard");
     const dataEl = document.getElementById("dataEvolucao");
@@ -300,6 +307,7 @@
       annotationActions.style.display = canAnnotate ? "flex" : "none";
       annotationBlock.style.display = "none";
       annotationTextEl.value = "";
+      renderAnnotations(ev);
     }
 
     /* ===============================
@@ -431,11 +439,50 @@
       if (idx >= 0) list[idx] = current;
       map[pacienteId] = list;
       saveMap(map);
+      renderAnnotations(current);
 
       annotationTextEl.value = "";
       annotationBlock.style.display = "none";
       alert("Anotação adicionada.");
     });
+    
+    function renderAnnotations(ev) {
+      // só mostra se assinada e ativa
+      const canShow = !!ev.signedAt && !ev.inactiveAt;
+
+      if (!canShow) {
+        annotationsList.style.display = "none";
+        annotationsItems.innerHTML = "";
+        return;
+      }
+
+      ensureAnnotations(ev);
+
+      if (!ev.annotations.length) {
+        annotationsList.style.display = "none";
+        annotationsItems.innerHTML = "";
+        return;
+      }
+
+      annotationsList.style.display = "block";
+      annotationsItems.innerHTML = "";
+
+      // mais recentes embaixo (ordem natural)
+      ev.annotations.forEach(a => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.style.marginTop = "10px";
+        div.style.padding = "12px";
+
+        const when = new Date(a.createdAt).toLocaleString("pt-BR");
+        div.innerHTML = `
+          <div class="muted" style="margin-bottom:8px;">${when}</div>
+          <div style="white-space:pre-wrap;"></div>
+        `;
+        div.querySelector("div[style*='white-space']").textContent = a.text;
+        annotationsItems.appendChild(div);
+      });
+    }
   </script>
 </body>
 </html>
