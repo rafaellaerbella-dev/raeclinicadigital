@@ -83,7 +83,7 @@
   </style>
 
   <script>
-    // 🔒 Verificação de login (RAE) - versão robusta (espera DOM existir)
+    // 🔒 Verificação de login (RAE)
     (async () => {
       try {
         const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
@@ -124,20 +124,21 @@
       <div class="card" style="margin-top:12px;">
         <div id="viewText" style="white-space:pre-wrap;"></div>
       </div>
-			
-			<div id="annotationBlock" style="display:none; margin-top:16px;">
-			  <label for="annotationText">Anotação</label>
-			  <textarea id="annotationText" placeholder="Adicionar anotação complementar..." style="min-height:120px;"></textarea>
-			
-			  <div class="row">
-			    <button id="saveAnnotationBtn" type="button">➕ Salvar anotação</button>
-			  </div>
-			</div>
-			
-			<div class="row" id="annotationActions" style="margin-top:16px; display:none;">
-			  <button id="addAnnotationBtn" type="button">📝 Anotar</button>
-			</div>
-			
+
+      <!-- ações/anotações: só assinada ativa -->
+      <div class="row" id="annotationActions" style="margin-top:16px; display:none;">
+        <button id="addAnnotationBtn" type="button">📝 Anotar</button>
+      </div>
+
+      <div id="annotationBlock" style="display:none; margin-top:12px;">
+        <label for="annotationText">Anotação</label>
+        <textarea id="annotationText" placeholder="Adicionar anotação complementar..." style="min-height:120px;"></textarea>
+        <div class="row">
+          <button id="saveAnnotationBtn" type="button">➕ Salvar anotação</button>
+        </div>
+      </div>
+
+      <!-- (lista de anotações fica para o passo B, se você quiser) -->
     </div>
 
     <!-- ===== EDIT MODE ===== -->
@@ -145,7 +146,7 @@
       <label for="dataEvolucao">Data da evolução (dd/mm/aaaa)</label>
       <input id="dataEvolucao" placeholder="29/01/2026" />
 
-      <label for="titulo">Título (opcional)</label>
+      <label for="titulo">Tipo/Título (opcional)</label>
       <input id="titulo" placeholder="Ex: Consulta de seguimento" />
 
       <label for="texto">Evolução</label>
@@ -163,66 +164,64 @@
 
     <div id="error"></div>
   </div>
-</body>
 
   <script>
     /* ===============================
-       CONFIG / HELPERS
+       HELPERS
     ================================ */
     const EVOL_KEY = "rae_evolucoes_v1";
     const qs = (k) => new URLSearchParams(location.search).get(k);
-    
+
     function loadMap() {
       try { return JSON.parse(localStorage.getItem(EVOL_KEY) || "{}"); }
       catch { return {}; }
     }
-    
+
     function saveMap(map) {
       localStorage.setItem(EVOL_KEY, JSON.stringify(map));
     }
-    
+
     function isoToBRDate(iso) {
       try { return new Date(iso).toLocaleDateString("pt-BR"); }
       catch { return ""; }
     }
-    
+
     function showError(msg) {
       const e = document.getElementById("error");
       e.style.display = "block";
       e.textContent = msg;
     }
-		
-		function ensureAnnotations(ev) {
-		  if (!Array.isArray(ev.annotations)) {
-		    ev.annotations = [];
-		  }
-		}
-    
+
+    function ensureAnnotations(ev) {
+      if (!Array.isArray(ev.annotations)) ev.annotations = [];
+    }
+
     /* ===============================
        PARAMS
     ================================ */
     const pacienteId = qs("pacienteId");
     const evolucaoId = qs("id");
     const isViewMode = qs("mode") === "view";
-    
+
     /* ===============================
        ELEMENTS
     ================================ */
     const backLink = document.getElementById("backLink");
     const titleEl = document.getElementById("title");
-    
+
     const viewModeEl = document.getElementById("viewMode");
     const viewDateEl = document.getElementById("viewDate");
     const viewStatusEl = document.getElementById("viewStatus");
     const viewRegisteredEl = document.getElementById("viewRegistered");
     const viewConsultTitleEl = document.getElementById("viewConsultTitle");
     const viewTextEl = document.getElementById("viewText");
-		const addAnnotationBtn = document.getElementById("addAnnotationBtn");
-		const annotationBlock = document.getElementById("annotationBlock");
-		const annotationTextEl = document.getElementById("annotationText");
-		const saveAnnotationBtn = document.getElementById("saveAnnotationBtn");
-		const annotationActions = document.getElementById("annotationActions");
-    
+
+    const annotationActions = document.getElementById("annotationActions");
+    const addAnnotationBtn = document.getElementById("addAnnotationBtn");
+    const annotationBlock = document.getElementById("annotationBlock");
+    const annotationTextEl = document.getElementById("annotationText");
+    const saveAnnotationBtn = document.getElementById("saveAnnotationBtn");
+
     const editCardEl = document.getElementById("editCard");
     const dataEl = document.getElementById("dataEvolucao");
     const tituloEl = document.getElementById("titulo");
@@ -231,116 +230,95 @@
     const signedInfoEl = document.getElementById("signedInfo");
     const saveBtn = document.getElementById("saveBtn");
     const signBtn = document.getElementById("signBtn");
-    
-    /* ===============================
-       BASIC VALIDATION
-    ================================ */
+
     if (!pacienteId) {
       showError("Falta ?pacienteId= na URL.");
       throw new Error("pacienteId ausente");
     }
-    
+
     backLink.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
-    
+
     /* ===============================
-       LOAD DATA
+       LOAD
     ================================ */
     const map = loadMap();
     const list = (map[pacienteId] || []).slice();
     let current = null;
-    
+
     if (evolucaoId) {
       current = list.find(e => e.id === evolucaoId) || null;
       if (!current) showError("Evolução não encontrada.");
     }
-		
-		if (current) {
- 				ensureAnnotations(current);
-		}
-    
+
+    if (current) ensureAnnotations(current);
+
     /* ===============================
-       VIEW / EDIT TOGGLES
+       VIEW/EDIT TOGGLES
     ================================ */
+    function showEdit() {
+      viewModeEl.style.display = "none";
+      editCardEl.style.display = "block";
+      annotationActions.style.display = "none";
+      annotationBlock.style.display = "none";
+      annotationTextEl.value = "";
+    }
+
     function showView(ev) {
       editCardEl.style.display = "none";
       viewModeEl.style.display = "block";
-    
+
       const regDate = ev.registeredAt ? isoToBRDate(ev.registeredAt) : "";
       const consultDate = ev.evolutionDate || regDate;
-    
+
+      // data sem "Data:"
       viewDateEl.textContent = consultDate || "";
-			
-			ensureAnnotations(ev);
-			annotationBlock.style.display = "none";
-			annotationTextEl.value = "";
-    
+
+      // status INATIVA (abaixo da data)
       if (ev.inactiveAt) {
         viewStatusEl.textContent = "INATIVA";
         viewStatusEl.style.color = "#c62828";
         viewStatusEl.style.fontWeight = "600";
         viewStatusEl.style.textTransform = "uppercase";
         viewStatusEl.style.fontSize = "12px";
-        viewStatusEl.style.marginTop = "6px";
+        viewStatusEl.style.marginTop = "10px";
         viewStatusEl.style.display = "block";
       } else {
         viewStatusEl.style.display = "none";
       }
-    
+
+      // registrado em só se diferente
       viewRegisteredEl.textContent =
-        ev.evolutionDate && ev.evolutionDate !== regDate
+        ev.evolutionDate && regDate && ev.evolutionDate !== regDate
           ? `Registrado em: ${regDate}`
           : "";
-    
+
       viewConsultTitleEl.textContent = ev.titulo || "";
       viewTextEl.textContent = ev.texto || "";
-			
-			
-		  annotationActions.style.display = "flex";
-		} else {
-		  annotationActions.style.display = "none";
-		}
-    
-    function showEdit() {
-      viewModeEl.style.display = "none";
-      editCardEl.style.display = "block";
+
+      // anotações: só se assinada e NÃO inativa
+      const canAnnotate = !!ev.signedAt && !ev.inactiveAt;
+      annotationActions.style.display = canAnnotate ? "flex" : "none";
+      annotationBlock.style.display = "none";
+      annotationTextEl.value = "";
     }
-    
-    function lockEdit(msg) {
-      dataEl.disabled = true;
-      tituloEl.disabled = true;
-      textoEl.disabled = true;
-      saveBtn.disabled = true;
-      saveBtn.style.opacity = "0.6";
-      if (msg) infoEl.textContent = msg;
-    }
-    
-    function unlockEdit() {
-      dataEl.disabled = false;
-      tituloEl.disabled = false;
-      textoEl.disabled = false;
-      saveBtn.disabled = false;
-      saveBtn.style.opacity = "1";
-    }
-    
+
     /* ===============================
        INITIAL RENDER
     ================================ */
     const now = new Date().toISOString();
-    
+
     if (current) {
       const isSigned = !!current.signedAt;
       const isInactive = !!current.inactiveAt;
-    
-      infoEl.textContent = `Registrado em: ${new Date(current.registeredAt).toLocaleString("pt-BR")}`;
-    
-      if (isSigned) {
-        signedInfoEl.textContent =
-          `Assinada em: ${new Date(current.signedAt).toLocaleString("pt-BR")}` +
-          (isInactive ? " • INATIVA" : "");
-      } else {
-        signedInfoEl.textContent = "";
-      }
-    
+
+      infoEl.textContent = current.registeredAt
+        ? `Registrado em: ${new Date(current.registeredAt).toLocaleString("pt-BR")}`
+        : `Registrado em: ${new Date().toLocaleString("pt-BR")}`;
+
+      signedInfoEl.textContent = isSigned
+        ? `Assinada em: ${new Date(current.signedAt).toLocaleString("pt-BR")}` + (isInactive ? " • INATIVA" : "")
+        : "";
+
       if (isViewMode || isSigned) {
         titleEl.textContent = "Evolução";
         showView(current);
@@ -352,29 +330,27 @@
         dataEl.value = current.evolutionDate || "";
         tituloEl.value = current.titulo || "";
         textoEl.value = current.texto || "";
-        unlockEdit();
+        saveBtn.style.display = "inline-block";
         signBtn.style.display = "inline-block";
       }
-    
     } else {
       titleEl.textContent = "Nova evolução";
       showEdit();
       infoEl.textContent = `Registrado em: ${new Date().toLocaleString("pt-BR")}`;
-      unlockEdit();
+      signedInfoEl.textContent = "";
+      saveBtn.style.display = "inline-block";
+      signBtn.style.display = "inline-block";
     }
-    
+
     /* ===============================
-       SAVE
+       SAVE (draft only)
     ================================ */
     saveBtn.addEventListener("click", () => {
       const texto = textoEl.value.trim();
-      if (!texto) {
-        alert("Informe o texto da evolução.");
-        return;
-      }
-    
+      if (!texto) { alert("Informe o texto da evolução."); return; }
+
       const evolutionDate = dataEl.value.trim() || null;
-    
+
       if (current) {
         current.titulo = tituloEl.value.trim();
         current.texto = texto;
@@ -390,69 +366,75 @@
           registeredAt: now,
           updatedAt: now,
           signedAt: null,
-          inactiveAt: null
-					annotations: []
+          inactiveAt: null,
+          inactiveReason: null,
+          annotations: []
         });
       }
-			
-			addAnnotationBtn.addEventListener("click", () => {
-			  annotationBlock.style.display = "block";
-			  annotationTextEl.focus();
-			});
-			
-			saveAnnotationBtn.addEventListener("click", () => {
-			  if (!current) return;
-			
-			  const text = annotationTextEl.value.trim();
-			  if (!text) {
-			    alert("Digite a anotação.");
-			    return;
-			  }
-			
-			  ensureAnnotations(current);
-			
-			  current.annotations.push({
-			    id: crypto.randomUUID(),
-			    text,
-			    createdAt: new Date().toISOString()
-			  });
-			
-			  const idx = list.findIndex(e => e.id === current.id);
-			  if (idx >= 0) list[idx] = current;
-			
-			  map[pacienteId] = list;
-			  saveMap(map);
-			
-			  annotationTextEl.value = "";
-			  annotationBlock.style.display = "none";
-			
-			  alert("Anotação adicionada.");
-			});
-    
+
       map[pacienteId] = list;
       saveMap(map);
       window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
     });
-    
+
     /* ===============================
-       SIGN
+       SIGN (only after save)
     ================================ */
     signBtn.addEventListener("click", () => {
       if (!current) {
-        alert("Salve a evolução antes de assinar.");
+        alert("Para assinar, salve a evolução primeiro.");
         return;
       }
-    
       if (!confirm("Ao assinar, a evolução não poderá mais ser editada.\n\nDeseja continuar?")) return;
-    
+
       current.signedAt = new Date().toISOString();
       current.updatedAt = current.signedAt;
-    
+      if (!current.registeredAt) current.registeredAt = current.signedAt;
+
       map[pacienteId] = list;
       saveMap(map);
-    
+
       window.location.href =
         `/evolucao-form.html?pacienteId=${encodeURIComponent(pacienteId)}&id=${encodeURIComponent(current.id)}&mode=view`;
+    });
+
+    /* ===============================
+       ANNOTATE (signed + active only)
+    ================================ */
+    addAnnotationBtn.addEventListener("click", () => {
+      annotationBlock.style.display = "block";
+      annotationTextEl.focus();
+    });
+
+    saveAnnotationBtn.addEventListener("click", () => {
+      if (!current) return;
+
+      // só permite se assinada e ativa
+      if (!current.signedAt || current.inactiveAt) {
+        alert("Não é possível anotar nesta evolução.");
+        return;
+      }
+
+      const text = annotationTextEl.value.trim();
+      if (!text) { alert("Digite a anotação."); return; }
+
+      ensureAnnotations(current);
+
+      current.annotations.push({
+        id: crypto.randomUUID(),
+        text,
+        createdAt: new Date().toISOString()
+      });
+
+      // salva de volta
+      const idx = list.findIndex(e => e.id === current.id);
+      if (idx >= 0) list[idx] = current;
+      map[pacienteId] = list;
+      saveMap(map);
+
+      annotationTextEl.value = "";
+      annotationBlock.style.display = "none";
+      alert("Anotação adicionada.");
     });
   </script>
 </body>
