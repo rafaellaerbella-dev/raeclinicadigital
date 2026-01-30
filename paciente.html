@@ -302,19 +302,9 @@
 
         // Mais recente primeiro
         evols.sort((a, b) => {
-          const da =
-            a.evolutionDate ||
-            (a.registeredAt ? a.registeredAt.slice(0, 10) : "") ||
-            a.updatedAt ||
-            "";
-
-          const db =
-            b.evolutionDate ||
-            (b.registeredAt ? b.registeredAt.slice(0, 10) : "") ||
-            b.updatedAt ||
-            "";
-
-          return db.localeCompare(da);
+          const aa = a.updatedAt || a.registeredAt || "";
+          const bb = b.updatedAt || b.registeredAt || "";
+          return bb.localeCompare(aa);
         });
 
         const list = document.getElementById("evolList");

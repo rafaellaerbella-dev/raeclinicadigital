@@ -399,33 +399,42 @@
         return;
       }
 
-      const evolutionDate = dataEl.value.trim() || null; // opcional
-      const type = (tipoEl.value || "retorno");          // ✅ 1.4 salvar tipo
+      const evolutionDate = dataEl.value.trim() || null;
+      const type = (tipoEl.value || "retorno");
+      const now2 = new Date().toISOString();
+
+      let idToOpen = null;
 
       if (current) {
-        current.type = type;                              // ✅
+        current.type = type;
         current.texto = texto;
         current.evolutionDate = evolutionDate;
-        current.updatedAt = new Date().toISOString();
+        current.updatedAt = now2;
+        idToOpen = current.id;
       } else {
+        const newId = crypto.randomUUID();
         list.push({
-          id: crypto.randomUUID(),
+          id: newId,
           pacienteId,
-          type,                                           // ✅
+          type,
           texto,
           evolutionDate,
-          registeredAt: now,
-          updatedAt: now,
+          registeredAt: now2,
+          updatedAt: now2,
           signedAt: null,
           inactiveAt: null,
           inactiveReason: null,
           annotations: []
         });
+        idToOpen = newId;
       }
 
       map[pacienteId] = list;
       saveMap(map);
-      window.location.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+
+      // ✅ permanece na evolução (modo edição)
+      window.location.href =
+        `/evolucao-form.html?pacienteId=${encodeURIComponent(pacienteId)}&id=${encodeURIComponent(idToOpen)}`;
     });
     
     /* ========= sign ========= */
