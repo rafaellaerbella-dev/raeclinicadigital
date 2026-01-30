@@ -15,73 +15,6 @@
     .item { padding: 12px; border-top: 1px solid #eee; display:flex; justify-content: space-between; gap: 12px; }
     .muted { color:#666; font-size: 13px; }
   
-      /* Timeline */
-    .timeline-item{
-      display:flex;
-      gap:14px;
-      padding:14px 0;
-      border-top:1px solid #eee;
-    }
-
-    .timeline-date{
-      width:110px;
-      flex:0 0 110px;
-      text-align:right;
-      font-size:13px;
-      color:#666;
-      padding-top:2px;
-    }
-
-    .timeline-rail{
-      width:14px;
-      flex:0 0 14px;
-      position:relative;
-    }
-
-    .timeline-rail::before{
-      content:"";
-      position:absolute;
-      top:0;
-      bottom:0;
-      left:6px;
-      width:2px;
-      background:#e6e6e6;
-    }
-
-    .timeline-dot{
-      width:12px;
-      height:12px;
-      border-radius:50%;
-      border:2px solid #bbb;
-      background:#fff;
-      position:absolute;
-      top:4px;
-      left:1px;
-    }
-
-    .timeline-body{
-      flex:1;
-      min-width:0;
-    }
-
-    .badge{
-      display:inline-block;
-      font-size:12px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid #ddd;
-      color:#555;
-      margin-left:8px;
-    }
-
-    .badge.signed{ color:#2e7d32; border-color:#cfe6d3; }
-    .badge.inactive{ color:#c62828; border-color:#f3c6c6; }
-
-    .strike{
-      text-decoration: line-through;
-      opacity: 0.75;
-    }
-  
   </style>
 </head>
 <body>
@@ -145,66 +78,16 @@
         .forEach(p => {
           const div = document.createElement("div");
           div.className = "item";
-          div.innerHTML = `
-            const isSigned = !!ev.signedAt;
-            const isInactive = !!ev.inactiveAt;
-
-            // Data principal da timeline = data da consulta (se existir) senão dia do registro
-            const regDate = ev.registeredAt ? formatDateBR(ev.registeredAt) : "";
-            const consultDate = ev.evolutionDate ? ev.evolutionDate : regDate;
-
-            // Badge
-            const badge = isInactive
-              ? `<span class="badge inactive">INATIVA</span>`
-              : isSigned
-                ? `<span class="badge signed">ASSINADA</span>`
-                : "";
-
-            const strikeClass = isInactive ? "strike" : "";
-
-            // Linha principal (como você queria)
-            const titleInline = ev.titulo ? ` (${escapeHtml(ev.titulo)})` : "";
-            const linhaPrincipal = `Evolução${titleInline}`;
-
-            // Botões conforme suas regras atuais (rascunho vs assinada)
-            let buttons = "";
-            if (!isSigned) {
-              buttons = `
-                <button data-edit-evol="${escapeHtml(ev.id)}">Editar</button>
-                <button data-del-evol="${escapeHtml(ev.id)}">Excluir</button>
-              `;
-            } else if (isSigned && !isInactive) {
-              buttons = `
-                <button data-open-evol="${escapeHtml(ev.id)}">Abrir</button>
-                <button data-inactivate-evol="${escapeHtml(ev.id)}">Inativar</button>
-              `;
-            } else {
-              buttons = `<button data-open-evol="${escapeHtml(ev.id)}">Abrir</button>`;
-            }
-
-            div.innerHTML = `
-              <div class="timeline-item">
-                <div class="timeline-date">${escapeHtml(consultDate || "")}</div>
-                <div class="timeline-rail"><span class="timeline-dot"></span></div>
-                <div class="timeline-body ${strikeClass}">
-                  <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
-                    <div style="flex:1; min-width:0;">
-                      <div style="font-weight:600;">
-                        ${linhaPrincipal} ${badge}
-                      </div>
-                      ${
-                        (ev.evolutionDate && regDate && ev.evolutionDate !== regDate)
-                          ? `<div class="label" style="margin-top:4px;">Registrado em ${escapeHtml(regDate)}</div>`
-                          : ""
-                      }
-                    </div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                      ${buttons}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
+          div.innerHTML = ` 
+            <div>
+              <strong>${p.nome || "(sem nome)"}</strong><br/>
+              <span class="muted">CPF: ${fmtCpf(p.cpf)} • Nasc: ${p.nascimento || ""}</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button data-edit="${p.id}">Editar</button>
+              <button data-open="${p.id}">Abrir</button>
+            </div>
+          `;
           list.appendChild(div);
         });
     }
