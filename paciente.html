@@ -338,28 +338,31 @@
         if (inactivateId) {
           const map = loadEvolMap();
           const evols = map[id] || [];
-          const ev = evols.find(x => x.id === inactivateId);
-      
+          const ev = evols.find(e => e.id === inactivateId);
+
           if (!ev) return;
-      
+
+          // Só permite inativar se assinada
           if (!ev.signedAt) {
             alert("Só é possível inativar uma evolução assinada.");
             return;
           }
+
+          // Se já está inativa, não faz nada
           if (ev.inactiveAt) return;
-      
+
           let reason = prompt("Justificativa para inativação (obrigatória):");
-          if (reason === null) return; // cancelou
-          reason = (reason || "").trim();
-      
+          if (reason === null) return;           // cancelou
+          reason = reason.trim();
+
           if (!reason) {
             alert("A justificativa é obrigatória para inativar.");
             return;
           }
-      
+
           ev.inactiveAt = new Date().toISOString();
           ev.inactiveReason = reason;
-      
+
           saveEvolMap(map);
           renderEvolucoes(id);
           return;

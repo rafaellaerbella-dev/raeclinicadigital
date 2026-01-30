@@ -117,6 +117,7 @@
     <div id="viewMode" style="display:none;">
       <div id="viewDate" class="muted"></div>
       <div id="viewStatus" class="muted" style="display:none;"></div>
+      <div id="viewInactiveReason" class="muted" style="display:none; margin-top:8px;"></div>
       <div id="viewRegistered" class="muted" style="margin-top:6px;"></div>
 
       <div id="viewConsultTitle" style="margin-top:14px; font-weight:600;"></div>
@@ -217,6 +218,7 @@
     const viewModeEl = document.getElementById("viewMode");
     const viewDateEl = document.getElementById("viewDate");
     const viewStatusEl = document.getElementById("viewStatus");
+    const viewInactiveReasonEl = document.getElementById("viewInactiveReason");
     const viewRegisteredEl = document.getElementById("viewRegistered");
     const viewConsultTitleEl = document.getElementById("viewConsultTitle");
     const viewTextEl = document.getElementById("viewText");
@@ -291,6 +293,21 @@
         viewStatusEl.style.display = "block";
       } else {
         viewStatusEl.style.display = "none";
+      }
+
+      // Motivo da inativação (se houver)
+      if (ev.inactiveAt) {
+        const when = isoToBRDate(ev.inactiveAt);
+        const reason = (ev.inactiveReason || "").trim();
+
+        viewInactiveReasonEl.style.display = "block";
+        viewInactiveReasonEl.textContent =
+          reason
+            ? `Motivo: ${reason}${when ? " • " + when : ""}`
+            : `Inativada${when ? " em " + when : ""}`;
+      } else {
+        viewInactiveReasonEl.style.display = "none";
+        viewInactiveReasonEl.textContent = "";
       }
 
       // registrado em só se diferente
