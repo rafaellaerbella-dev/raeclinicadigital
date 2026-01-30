@@ -124,6 +124,20 @@
       <div class="card" style="margin-top:12px;">
         <div id="viewText" style="white-space:pre-wrap;"></div>
       </div>
+			
+			<div id="annotationBlock" style="display:none; margin-top:16px;">
+			  <label for="annotationText">Anotação</label>
+			  <textarea id="annotationText" placeholder="Adicionar anotação complementar..." style="min-height:120px;"></textarea>
+			
+			  <div class="row">
+			    <button id="saveAnnotationBtn" type="button">➕ Salvar anotação</button>
+			  </div>
+			</div>
+			
+			<div class="row" id="annotationActions" style="margin-top:16px; display:none;">
+			  <button id="addAnnotationBtn" type="button">📝 Anotar</button>
+			</div>
+			
     </div>
 
     <!-- ===== EDIT MODE ===== -->
@@ -177,6 +191,12 @@
       e.style.display = "block";
       e.textContent = msg;
     }
+		
+		function ensureAnnotations(ev) {
+		  if (!Array.isArray(ev.annotations)) {
+		    ev.annotations = [];
+		  }
+		}
     
     /* ===============================
        PARAMS
@@ -197,6 +217,11 @@
     const viewRegisteredEl = document.getElementById("viewRegistered");
     const viewConsultTitleEl = document.getElementById("viewConsultTitle");
     const viewTextEl = document.getElementById("viewText");
+		const addAnnotationBtn = document.getElementById("addAnnotationBtn");
+		const annotationBlock = document.getElementById("annotationBlock");
+		const annotationTextEl = document.getElementById("annotationText");
+		const saveAnnotationBtn = document.getElementById("saveAnnotationBtn");
+		const annotationActions = document.getElementById("annotationActions");
     
     const editCardEl = document.getElementById("editCard");
     const dataEl = document.getElementById("dataEvolucao");
@@ -228,6 +253,10 @@
       current = list.find(e => e.id === evolucaoId) || null;
       if (!current) showError("Evolução não encontrada.");
     }
+		
+		if (current) {
+ 				ensureAnnotations(current);
+		}
     
     /* ===============================
        VIEW / EDIT TOGGLES
@@ -240,6 +269,10 @@
       const consultDate = ev.evolutionDate || regDate;
     
       viewDateEl.textContent = consultDate || "";
+			
+			ensureAnnotations(ev);
+			annotationBlock.style.display = "none";
+			annotationTextEl.value = "";
     
       if (ev.inactiveAt) {
         viewStatusEl.textContent = "INATIVA";
@@ -260,7 +293,12 @@
     
       viewConsultTitleEl.textContent = ev.titulo || "";
       viewTextEl.textContent = ev.texto || "";
-    }
+			
+			
+		  annotationActions.style.display = "flex";
+		} else {
+		  annotationActions.style.display = "none";
+		}
     
     function showEdit() {
       viewModeEl.style.display = "none";
@@ -353,8 +391,43 @@
           updatedAt: now,
           signedAt: null,
           inactiveAt: null
+					annotations: []
         });
       }
+			
+			addAnnotationBtn.addEventListener("click", () => {
+			  annotationBlock.style.display = "block";
+			  annotationTextEl.focus();
+			});
+			
+			saveAnnotationBtn.addEventListener("click", () => {
+			  if (!current) return;
+			
+			  const text = annotationTextEl.value.trim();
+			  if (!text) {
+			    alert("Digite a anotação.");
+			    return;
+			  }
+			
+			  ensureAnnotations(current);
+			
+			  current.annotations.push({
+			    id: crypto.randomUUID(),
+			    text,
+			    createdAt: new Date().toISOString()
+			  });
+			
+			  const idx = list.findIndex(e => e.id === current.id);
+			  if (idx >= 0) list[idx] = current;
+			
+			  map[pacienteId] = list;
+			  saveMap(map);
+			
+			  annotationTextEl.value = "";
+			  annotationBlock.style.display = "none";
+			
+			  alert("Anotação adicionada.");
+			});
     
       map[pacienteId] = list;
       saveMap(map);
