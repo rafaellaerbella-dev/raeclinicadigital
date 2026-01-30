@@ -303,11 +303,10 @@
 
       // Motivo (se inativa)
       if (ev.inactiveAt) {
-        const when = isoToBRDate(ev.inactiveAt);
         const reason = (ev.inactiveReason || "").trim();
-        viewInactiveReasonEl.style.display = "block";
-        viewInactiveReasonEl.textContent =
-          reason ? `Motivo: ${reason}${when ? " • " + when : ""}` : `Inativada${when ? " em " + when : ""}`;
+
+        viewInactiveReasonEl.style.display = reason ? "block" : "none";
+        viewInactiveReasonEl.textContent = reason ? `Motivo: ${reason}` : "";
       } else {
         viewInactiveReasonEl.style.display = "none";
         viewInactiveReasonEl.textContent = "";
