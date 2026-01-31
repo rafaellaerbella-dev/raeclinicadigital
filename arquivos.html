@@ -143,9 +143,21 @@
       errorEl.style.display = "block";
       errorEl.textContent = msg;
     }
+
     function clearError(){
       errorEl.style.display = "none";
       errorEl.textContent = "";
+    }
+
+    function loadPatients(){
+      try { return JSON.parse(localStorage.getItem("rae_patients_v1") || "[]"); }
+      catch { return []; }
+    }
+
+    function getPacienteNomeById(id){
+      const patients = loadPatients();
+      const p = patients.find(x => x.id === id);
+      return p?.nome || null;
     }
 
     if (!pacienteId){
@@ -154,7 +166,11 @@
       subtitle.textContent = "";
     } else {
       backLink.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
-      subtitle.textContent = `Paciente: ${pacienteId}`;
+
+      const nomePaciente = getPacienteNomeById(pacienteId);
+      subtitle.innerHTML = nomePaciente
+        ? `<strong>Paciente:</strong> ${nomePaciente}`
+        : `<strong>Paciente:</strong> ${pacienteId}`;
     }
 
     function fmtSize(bytes){
@@ -193,25 +209,6 @@
       });
     }
 
-    const pacienteLabelEl = document.getElementById("pacienteLabel");
-
-    const pacienteId = new URLSearchParams(location.search).get("pacienteId");
-
-    function loadPatients() {
-      try {
-        return JSON.parse(localStorage.getItem("rae_patients_v1") || "[]");
-      } catch {
-        return [];
-      }
-    }
-
-    const patients = loadPatients();
-    const paciente = patients.find(p => p.id === pacienteId);
-
-    if (pacienteLabelEl && paciente) {
-      pacienteLabelEl.innerHTML = `<strong>Paciente:</strong> ${paciente.nome}`;
-    }
-
     uploadBtn.addEventListener("click", async () => {
       if (!pacienteId) return;
 
@@ -245,7 +242,6 @@
 
         const url = URL.createObjectURL(rec.blob);
         window.open(url, "_blank");
-        // nota: não revoga imediatamente pra não quebrar a aba nova
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
       }
 
