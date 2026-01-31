@@ -132,40 +132,64 @@
 
     button:hover{ background:#f7f7f7; }
 
-    /* ===== ENDEREÇO (grid específico, independente do form-grid) ===== */
+   /* ===== ENDEREÇO ===== */
+  .address-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* base: 3 colunas */
+    gap: 14px;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .address-grid .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  /* Linhas inteiras */
+  .address-grid .full{
+    grid-column: 1 / -1;
+  }
+
+  /* Linha 3: número | complemento | bairro */
+  .address-grid .numero{
+    grid-column: 1 / 2;
+  }
+
+  .address-grid .complemento{
+    grid-column: 2 / 3;
+  }
+
+  .address-grid .bairro{
+    grid-column: 3 / 4;
+  }
+
+  /* Linha 4: cidade | UF */
+  .address-grid .cidade{
+    grid-column: 1 / 3; /* ocupa duas colunas */
+  }
+
+  .address-grid .uf{
+    grid-column: 3 / 4;
+  }
+
+  /* UF compacto */
+  .address-grid .uf select{
+    width:100%;
+  }
+
+  /* ===== Mobile ===== */
+  @media (max-width: 720px){
     .address-grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr 90px; /* 3 colunas sempre no desktop */
-      gap:14px;
-      width:100%;
-      margin-top:12px;
+      grid-template-columns: 1fr;
     }
 
     .address-grid .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      min-width:0;
+      grid-column: 1 / -1 !important;
     }
-
-    /* CEP e Rua ocupam linha inteira */
-    .address-grid .full{
-      grid-column: 1 / -1;
-    }
-
-    /* UF já é a 3ª coluna */
-    .address-grid .uf select{
-      width:100%;
-      min-width:0;
-    }
-
-    /* Responsivo */
-    @media (max-width: 720px){
-      body{ margin:16px; }
-      .form-grid{ grid-template-columns: 1fr; }
-      .address-grid{ grid-template-columns: 1fr; }
-      .address-grid .full{ grid-column:auto; }
-    }
+  }
   </style>
 </head>
 
