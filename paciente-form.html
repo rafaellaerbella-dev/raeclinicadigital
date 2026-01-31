@@ -41,6 +41,7 @@
 
     /* Fieldset (Endereço) */
     .fieldset{
+      width: 100%;
       border:1px solid #eee;
       border-radius:12px;
       padding:14px 16px 16px;
@@ -87,9 +88,11 @@
       background-size:16px;
     }
 
-    input:focus, textarea:focus, select:focus{
-      outline:none;
-      border-color:#bbb;
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #bbb;
     }
 
     /* Grid geral */
@@ -98,6 +101,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 14px;
       margin-top: 12px;
+      width: 100%;
     }
 
     .form-grid > div{
@@ -114,15 +118,21 @@
     .addr3{
       grid-column: 1 / -1;
       display:grid;
-      grid-template-columns: 1fr 1fr 90px;
+      grid-template-columns: 2fr 2fr 90px;
       gap: 14px;
       align-items: end;
+      width: 100%;
     }
 
     .addr3 > div{
       display:flex;
       flex-direction:column;
       gap: 6px;
+    }
+
+    .addr3 select {
+      width: 100%;
+      min-width: 0;
     }
 
     /* Botões */
