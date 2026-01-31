@@ -13,46 +13,143 @@
     button { margin-top: 16px; padding: 10px 12px; cursor:pointer; }
     .muted { color:#666; font-size: 13px; }
     #danger { background:#ffebee; border:1px solid #ef5350; color:#c62828; padding:10px; border-radius:8px; margin-top:12px; display:none; }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .form-grid .full{
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 720px){
+      .form-grid{
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
+
 <body>
   <a href="/pacientes.html">← Voltar</a>
-  <h1 id="title">Novo paciente</h1>
-  <p class="muted">Armazenado localmente no navegador (por enquanto).</p>
+  <h1 id="title">Paciente</h1>
 
-  <div id="danger"></div>
+  <div id="error"></div>
 
-  <form id="form">
-    <label>Nome</label>
-    <input id="nome" required />
+  <div class="card">
+    <div class="muted">Cadastro do paciente</div>
 
-    <div class="row">
+    <div class="form-grid">
+      <!-- Identificação -->
       <div>
-        <label>CPF (apenas números ou formatado)</label>
-        <input id="cpf" />
+        <label for="nome">Nome</label>
+        <input id="nome" placeholder="Nome completo" />
       </div>
+
       <div>
-        <label>Nascimento (dd/mm/aaaa)</label>
-        <input id="nascimento" placeholder="01/01/1990" />
+        <label for="cpf">CPF</label>
+        <input id="cpf" placeholder="Somente números" />
+      </div>
+
+      <div>
+        <label for="nascimento">Nascimento</label>
+        <input id="nascimento" placeholder="dd/mm/aaaa" />
+      </div>
+
+      <div>
+        <label for="telefone">Telefone</label>
+        <input id="telefone" placeholder="DDD + número" />
+      </div>
+
+      <div class="full">
+        <label for="email">E-mail</label>
+        <input id="email" placeholder="email@exemplo.com" />
+      </div>
+
+      <!-- Alto custo -->
+      <div>
+        <label for="cns">CNS</label>
+        <input id="cns" placeholder="Cartão Nacional de Saúde" />
+      </div>
+
+      <div>
+        <label for="nomeMae">Nome da mãe</label>
+        <input id="nomeMae" placeholder="Nome completo" />
+      </div>
+
+      <!-- Endereço -->
+      <div>
+        <label for="cep">CEP</label>
+        <input id="cep" placeholder="00000-000" />
+        <div class="muted">Ao digitar o CEP, tentaremos preencher rua/bairro/cidade/UF.</div>
+      </div>
+
+      <div>
+        <label for="uf">Estado (UF)</label>
+        <input id="uf" maxlength="2" placeholder="SP" />
+      </div>
+
+      <div class="full">
+        <label for="rua">Rua / Logradouro</label>
+        <input id="rua" placeholder="Rua, avenida..." />
+      </div>
+
+      <div>
+        <label for="numero">Número</label>
+        <input id="numero" placeholder="Nº" />
+      </div>
+
+      <div>
+        <label for="complemento">Complemento</label>
+        <input id="complemento" placeholder="Apto, bloco..." />
+      </div>
+
+      <div>
+        <label for="bairro">Bairro</label>
+        <input id="bairro" />
+      </div>
+
+      <div>
+        <label for="cidade">Cidade</label>
+        <input id="cidade" />
+      </div>
+
+      <!-- Emergência -->
+      <div class="full">
+        <div class="muted" style="margin-top:10px; font-weight:600;">Contato de emergência</div>
+      </div>
+
+      <div>
+        <label for="emergNome">Nome</label>
+        <input id="emergNome" />
+      </div>
+
+      <div>
+        <label for="emergTelefone">Telefone</label>
+        <input id="emergTelefone" />
+      </div>
+
+      <div class="full">
+        <label for="emergRelacao">Relação (opcional)</label>
+        <input id="emergRelacao" placeholder="Ex: irmã, cônjuge, pai..." />
+      </div>
+
+      <!-- Observações -->
+      <div class="full">
+        <label for="obs">Observações clínicas fixas (opcional)</label>
+        <textarea id="obs" style="min-height:120px;" placeholder="Ex: alergias relevantes, alertas importantes..."></textarea>
       </div>
     </div>
 
-    <div class="row">
-      <div>
-        <label>Telefone</label>
-        <input id="telefone" />
-      </div>
-      <div>
-        <label>E-mail</label>
-        <input id="email" />
-      </div>
+    <div class="actions">
+      <button id="saveBtn" type="button">💾 Salvar</button>
+      <button id="cancelBtn" type="button">Cancelar</button>
     </div>
-
-    <label>Endereço</label>
-    <input id="endereco" />
-
-    <button type="submit">Salvar</button>
-  </form>
+  </div>
+</form>
 
   <script>
     const KEY = "rae_patients_v1";
@@ -128,6 +225,52 @@
       savePatients(next);
 
       window.location.href = "/pacientes.html";
+    });
+
+    function onlyDigits(s) {
+      return (s || "").replace(/\D/g, "");
+    }
+
+    function setValue(id, value) {
+      const el = document.getElementById(id);
+      if (el && (el.value || "") === "") el.value = value || "";
+    }
+
+    // debounce simples para não chamar toda hora
+    let cepTimer = null;
+
+    async function buscarCepEPreencher(cepDigits) {
+      try {
+        const resp = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+        if (!resp.ok) return;
+
+        const data = await resp.json();
+        if (data.erro) return;
+
+        // Só preenche se os campos estiverem vazios (não sobrescreve o que você já digitou)
+        setValue("rua", data.logradouro);
+        setValue("bairro", data.bairro);
+        setValue("cidade", data.localidade);
+        setValue("uf", data.uf);
+      } catch {
+        // silencioso: se falhar, você preenche manualmente
+      }
+    }
+
+    document.getElementById("cep")?.addEventListener("input", (e) => {
+      const el = e.target;
+      const digits = onlyDigits(el.value);
+
+      // opcional: formatar como 00000-000 sem atrapalhar
+      if (digits.length <= 8) {
+        el.value = digits.length > 5 ? `${digits.slice(0,5)}-${digits.slice(5)}` : digits;
+      }
+
+      clearTimeout(cepTimer);
+
+      if (digits.length === 8) {
+        cepTimer = setTimeout(() => buscarCepEPreencher(digits), 250);
+      }
     });
   </script>
 </body>
