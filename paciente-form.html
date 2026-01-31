@@ -179,17 +179,17 @@
 
   /* ===== AJUSTES FINAIS DE PROPORÇÃO ===== */
 
-/* CEP menor */
-#cep{
-  max-width: 260px;
-}
+  /* CEP menor */
+  #cep{
+    max-width: 260px;
+  }
 
-/* Linha Número / Complemento / Bairro */
-.addr-row3{
-  display: grid;
-  grid-template-columns: 160px 1fr 1fr;
-  gap: 14px;
-}
+  /* Linha Número / Complemento / Bairro */
+  .addr-row3{
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr;
+    gap: 14px;
+  }
 
   /* Linha Cidade / UF */
   .addr-row2{
@@ -220,6 +220,31 @@
     .addr-row2{
       grid-template-columns: 1fr;
     }
+  }
+
+  /* ===== GRID DO CADASTRO ===== */
+  .form-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .form-grid > div{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* ocupa a linha inteira */
+  .full{
+    grid-column: 1 / -1;
+  }
+
+  /* qualquer card dentro do grid ocupa a linha toda */
+  .form-grid > .card{
+    grid-column: 1 / -1;
   }
   </style>
 
@@ -273,7 +298,7 @@
       </div>
 
       <!-- Endereço -->
-      <div class="card">
+      <div class="card full">
         <div class="section-title">Endereço</div>
 
         <div class="addr-wrap">
