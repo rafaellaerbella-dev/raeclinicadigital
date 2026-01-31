@@ -6,186 +6,180 @@
   <title>Novo paciente • RAE Clínica Digital</title>
   
   <style>
-    /* =========================
-       BASE
-    ========================== */
-    * { box-sizing: border-box; }
+      /* ===============================
+     RESET / BASE
+  ================================ */
+  * {
+    box-sizing: border-box;
+  }
 
-    body{
-      font-family: Arial, sans-serif;
-      margin: 24px;
-      max-width: 980px;
+  body{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #fff;
+    color: #222;
+  }
+
+  a{
+    color:#0b66c3;
+    text-decoration:none;
+  }
+
+  h1{
+    margin: 0 0 16px 0;
+    font-size: 26px;
+  }
+
+  label{
+    font-weight:600;
+    font-size:13px;
+  }
+
+  /* ===============================
+     LAYOUT GLOBAL
+  ================================ */
+  .page{
+    max-width: 980px;
+    margin: 24px auto;
+    padding: 0 24px;
+  }
+
+  /* ===============================
+     CARDS / SEÇÕES
+  ================================ */
+  .card{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:18px;
+    padding:24px;
+    width:100%;
+  }
+
+  .section-title{
+    font-size:22px;
+    font-weight:700;
+    margin-bottom:20px;
+  }
+
+  /* ===============================
+     INPUTS
+  ================================ */
+  input,
+  textarea,
+  select{
+    width:100%;
+    padding:12px;
+    border-radius:14px;
+    border:1px solid #ddd;
+    font-size:14px;
+    font-family:inherit;
+    background:#fff;
+  }
+
+  textarea{
+    min-height:120px;
+    resize:vertical;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus{
+    outline:none;
+    border-color:#bbb;
+  }
+
+  /* Select com aparência de input */
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg fill='%23666' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    background-size:16px;
+  }
+
+  /* ===============================
+     ENDEREÇO
+  ================================ */
+  .address-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:16px;
+    width:100%;
+  }
+
+  .address-grid .field{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  /* Linhas inteiras */
+  .address-grid .full{
+    grid-column: 1 / -1;
+  }
+
+  /* Linha: número / complemento / bairro */
+  .address-grid .numero{
+    grid-column: 1 / 2;
+  }
+
+  .address-grid .complemento{
+    grid-column: 2 / 3;
+  }
+
+  .address-grid .bairro{
+    grid-column: 3 / 4;
+  }
+
+  /* Linha: cidade + UF */
+  .address-grid .cidade{
+    grid-column: 1 / 3;
+  }
+
+  .address-grid .uf{
+    grid-column: 3 / 4;
+  }
+
+  /* ===============================
+     BOTÕES
+  ================================ */
+  .actions{
+    display:flex;
+    gap:12px;
+    margin-top:24px;
+    flex-wrap:wrap;
+  }
+
+  button{
+    padding:12px 18px;
+    border-radius:14px;
+    border:1px solid #ddd;
+    background:#fff;
+    cursor:pointer;
+  }
+
+  button:hover{
+    background:#f6f6f6;
+  }
+
+  /* ===============================
+     RESPONSIVO
+  ================================ */
+  @media (max-width: 720px){
+    .page{
+      padding: 0 16px;
     }
 
-    a{ color:#0b66c3; text-decoration:none; }
-    h1{ margin: 0 0 10px 0; }
-
-    .muted{ color:#666; font-size:13px; }
-
-    #error{
-      display:none;
-      background:#ffebee;
-      border:1px solid #ef5350;
-      color:#c62828;
-      padding:12px;
-      border-radius:12px;
-      margin-top:12px;
-      white-space:pre-wrap;
-    }
-
-    /* =========================
-       CARDS / SEÇÕES
-    ========================== */
-    .card{
-      border:1px solid #eee;
-      padding:16px;
-      border-radius:12px;
-      margin-top:16px;
-      background:#fff;
-      width:100%;
-      max-width:none;
-    }
-
-    .section-title{
-      font-weight:700;
-      font-size:18px;
-      margin-bottom:10px;
-      color:#333;
-    }
-
-    /* =========================
-       FORM CONTROLS
-    ========================== */
-    label{
-      font-weight:600;
-      font-size:13px;
-      color:#222;
-    }
-
-    input, textarea, select{
-      width:100%;
-      padding:10px;
-      border:1px solid #ddd;
-      border-radius:12px;
-      font-family:inherit;
-      font-size:14px;
-      background:#fff;
-    }
-
-    textarea{
-      min-height:120px;
-      resize:vertical;
-    }
-
-    input:focus, select:focus, textarea:focus{
-      outline:none;
-      border-color:#bbb;
-    }
-
-    /* select com seta custom (igual input) */
-    select{
-      appearance:none;
-      -webkit-appearance:none;
-      -moz-appearance:none;
-
-      background-image:url("data:image/svg+xml;utf8,<svg fill='%23666' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-      background-repeat:no-repeat;
-      background-position:right 10px center;
-      background-size:16px;
-    }
-
-    /* =========================
-       GRID GERAL DO CADASTRO
-    ========================== */
-    .form-grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 12px;
-      width: 100%;
-    }
-
-    .form-grid > div{
-      display:flex;
-      flex-direction:column;
-      gap: 6px;
-    }
-
-    .full{ grid-column: 1 / -1; }
-
-    /* =========================
-       ENDEREÇO (SEM FIELDSET)
-       Layout por LINHAS:
-       1) CEP
-       2) Rua
-       3) Número | Complemento | Bairro
-       4) Cidade | UF (UF menor)
-    ========================== */
-    .addr-wrap{
-      display:grid;
+    .address-grid{
       grid-template-columns: 1fr;
-      gap: 14px;
-      width: 100%;
     }
 
-    .addr-wrap .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      min-width:0;
+    .address-grid .field{
+      grid-column: 1 / -1 !important;
     }
-
-    .addr-row3{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:14px;
-      width:100%;
-    }
-
-    .addr-row2{
-      display:grid;
-      grid-template-columns: 1fr 90px;
-      gap:14px;
-      align-items:end;
-      width:100%;
-    }
-
-    .addr-row2 .uf select{
-      width:100%;
-      min-width:0;
-    }
-
-    /* =========================
-       BOTÕES
-    ========================== */
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:16px;
-    }
-
-    button{
-      padding:10px 14px;
-      border-radius:10px;
-      border:1px solid #ddd;
-      background:#fff;
-      cursor:pointer;
-    }
-
-    button:hover{ background:#f7f7f7; }
-
-    /* =========================
-       RESPONSIVO
-    ========================== */
-    @media (max-width: 720px){
-      body{ margin: 16px; }
-
-      .form-grid{ grid-template-columns: 1fr; }
-
-      .addr-row3{ grid-template-columns: 1fr; }
-      .addr-row2{ grid-template-columns: 1fr; }
-    }
+  }
   </style>
   
 </head>
