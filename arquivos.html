@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arquivos • RAE Clínica Digital</title>
+
+  <style>
+    *{ box-sizing: border-box; }
+    body{ font-family: Arial, sans-serif; margin:0; background:#fff; color:#222; }
+    .page{ max-width:980px; margin:24px auto; padding:0 24px; width:100%; }
+    a{ color:#0b66c3; text-decoration:none; }
+    h1{ margin:0 0 12px 0; font-size:26px; }
+    .muted{ color:#666; font-size:13px; }
+    .card{ border:1px solid #eee; border-radius:18px; padding:24px; margin-top:16px; background:#fff; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    input[type="file"]{ width:100%; }
+    input, textarea{
+      width:100%;
+      padding:12px;
+      border:1px solid #ddd;
+      border-radius:14px;
+      font-family:inherit;
+      font-size:14px;
+    }
+    textarea{ min-height:80px; resize:vertical; }
+    button{
+      padding:12px 18px;
+      border-radius:14px;
+      border:1px solid #ddd;
+      background:#fff;
+      cursor:pointer;
+    }
+    button:hover{ background:#f6f6f6; }
+    #error{
+      display:none;
+      background:#ffebee;
+      border:1px solid #ef5350;
+      color:#c62828;
+      padding:12px;
+      border-radius:12px;
+      margin-top:12px;
+      white-space:pre-wrap;
+    }
+    .item{
+      border-top:1px solid #eee;
+      padding:14px 0;
+      display:flex;
+      gap:12px;
+      justify-content:space-between;
+      align-items:flex-start;
+    }
+    .item:first-child{ border-top:0; }
+    .name{ font-weight:700; }
+    .meta{ color:#666; font-size:13px; margin-top:4px; }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    @media (max-width:720px){
+      .page{ padding:0 16px; }
+      .item{ flex-direction:column; }
+      .actions{ justify-content:flex-start; }
+    }
+  </style>
+
+  <script>
+    // 🔒 Login check
+    (async () => {
+      try {
+        const r = await fetch("https://api.raeclinicadigital.com/auth/me", { credentials: "include" });
+        const j = await r.json().catch(() => ({}));
+        if (!j.ok) { window.location.href = "/auth/login.html"; return; }
+        const showApp = () => document.getElementById("app").style.display = "block";
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", showApp);
+        else showApp();
+      } catch {
+        window.location.href = "/auth/login.html";
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="page" id="app" style="display:none;">
+    <a id="backLink">← Voltar</a>
+    <h1>Arquivos</h1>
+    <div class="muted" id="subtitle"></div>
+
+    <div id="error"></div>
+
+    <div class="card">
+      <div class="row">
+        <div style="flex:1; min-width:260px;">
+          <label for="fileInput">Selecionar arquivo</label>
+          <input id="fileInput" type="file" />
+          <div class="muted" style="margin-top:6px;">PDF, imagens e outros arquivos.</div>
+        </div>
+
+        <div style="flex:1; min-width:260px;">
+          <label for="note">Observação (opcional)</label>
+          <textarea id="note" placeholder="Ex: Laudo de exame, documento, relatório..."></textarea>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="uploadBtn" type="button">⬆️ Enviar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;">Lista</div>
+          <div class="muted">Armazenamento local (IndexedDB).</div>
+        </div>
+        <button id="refreshBtn" type="button">Atualizar</button>
+      </div>
+
+      <div id="list" style="margin-top:12px;"></div>
+      <div id="empty" class="muted" style="display:none; margin-top:12px;">Nenhum arquivo ainda.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { addFile, listFiles, getFile, deleteFile } from "./files-db.js";
+
+    const qs = (k) => new URLSearchParams(location.search).get(k);
+    const pacienteId = qs("pacienteId");
+
+    const backLink = document.getElementById("backLink");
+    const subtitle = document.getElementById("subtitle");
+    const errorEl = document.getElementById("error");
+
+    const fileInput = document.getElementById("fileInput");
+    const noteEl = document.getElementById("note");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    const listEl = document.getElementById("list");
+    const emptyEl = document.getElementById("empty");
+
+    function showError(msg){
+      errorEl.style.display = "block";
+      errorEl.textContent = msg;
+    }
+    function clearError(){
+      errorEl.style.display = "none";
+      errorEl.textContent = "";
+    }
+
+    if (!pacienteId){
+      showError("Falta ?pacienteId= na URL.");
+      backLink.href = "/pacientes.html";
+      subtitle.textContent = "";
+    } else {
+      backLink.href = `/paciente.html?id=${encodeURIComponent(pacienteId)}`;
+      subtitle.textContent = `Paciente: ${pacienteId}`;
+    }
+
+    function fmtSize(bytes){
+      if (!bytes && bytes !== 0) return "";
+      const kb = bytes/1024;
+      if (kb < 1024) return `${kb.toFixed(1)} KB`;
+      return `${(kb/1024).toFixed(1)} MB`;
+    }
+
+    async function render(){
+      if (!pacienteId) return;
+      clearError();
+
+      const items = await listFiles(pacienteId);
+
+      listEl.innerHTML = "";
+      emptyEl.style.display = items.length ? "none" : "block";
+
+      items.forEach(it => {
+        const div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+          <div style="flex:1; min-width:0;">
+            <div class="name">${it.name}</div>
+            <div class="meta">${fmtSize(it.size)} • ${new Date(it.createdAt).toLocaleString("pt-BR")}</div>
+            ${it.note ? `<div class="meta">${it.note}</div>` : ``}
+          </div>
+          <div class="actions">
+            <button type="button" data-open="${it.id}">Abrir</button>
+            <button type="button" data-del="${it.id}">Excluir</button>
+          </div>
+        `;
+
+        listEl.appendChild(div);
+      });
+    }
+
+    uploadBtn.addEventListener("click", async () => {
+      if (!pacienteId) return;
+
+      const f = fileInput.files?.[0];
+      if (!f) { showError("Selecione um arquivo."); return; }
+
+      clearError();
+      uploadBtn.disabled = true;
+
+      try{
+        await addFile({ pacienteId, file: f, note: noteEl.value.trim() });
+        fileInput.value = "";
+        noteEl.value = "";
+        await render();
+      } catch (e){
+        showError("Falha ao salvar arquivo: " + (e?.message || String(e)));
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+
+    refreshBtn.addEventListener("click", render);
+
+    listEl.addEventListener("click", async (e) => {
+      const openId = e.target?.getAttribute?.("data-open");
+      const delId = e.target?.getAttribute?.("data-del");
+
+      if (openId){
+        const rec = await getFile(openId);
+        if (!rec) return;
+
+        const url = URL.createObjectURL(rec.blob);
+        window.open(url, "_blank");
+        // nota: não revoga imediatamente pra não quebrar a aba nova
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      }
+
+      if (delId){
+        const ok = confirm("Excluir este arquivo?");
+        if (!ok) return;
+        await deleteFile(delId);
+        await render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

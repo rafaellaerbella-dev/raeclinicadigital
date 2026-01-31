@@ -169,6 +169,7 @@
       <div class="actions">
         <button id="btnEditar">Editar</button>
         <button id="btnPrescrever">💊 Prescrever (Memed)</button>
+        <button id="btnArquivos">📎 Arquivos</button>
       </div>
 
       <div class="card" id="evolCard" style="margin-top:16px;">
@@ -254,6 +255,10 @@
             `&nascimento=${encodeURIComponent(p.nascimento || "")}`;
 
           window.location.href = url;
+        });
+
+        document.getElementById("btnArquivos").addEventListener("click", () => {
+          window.location.href = `/arquivos.html?pacienteId=${encodeURIComponent(id)}`;
         });
       }
 
