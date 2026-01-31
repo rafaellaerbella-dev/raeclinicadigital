@@ -102,29 +102,41 @@
   /* ===============================
      ENDEREÇO
   ================================ */
-  .address-grid{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap:16px;
-    width:100%;
+  /* ===== Endereço (definitivo, sem conflito) ===== */
+  .addr-wrap{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    width: 100%;
+    margin-top: 12px;
   }
 
-  .address-grid .field{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
+  .addr-field{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
   }
 
-  /* Linhas inteiras */
-  .address-grid .full{
-    grid-column: 1 / -1;
+  .addr-row3{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    width: 100%;
   }
 
-  /* Linha: número / complemento / bairro */
-  .addr-wrap{ display:grid; grid-template-columns:1fr; gap:14px; }
-  .addr-row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
-  .addr-row2{ display:grid; grid-template-columns:1fr 90px; gap:14px; align-items:end; }
-  @media (max-width:720px){ .addr-row3,.addr-row2{ grid-template-columns:1fr; } }
+  .addr-row2{
+    display: grid;
+    grid-template-columns: 1fr 78px; /* UF menor (ajuste se quiser) */
+    gap: 14px;
+    align-items: end;
+    width: 100%;
+  }
+
+  @media (max-width: 720px){
+    .addr-row3{ grid-template-columns: 1fr; }
+    .addr-row2{ grid-template-columns: 1fr; }
+  }
 
   /* ===============================
      BOTÕES
@@ -220,42 +232,55 @@
         <div class="section-title">Endereço</div>
 
         <div class="addr-wrap">
-          <div class="field">
+          <!-- Linha 1 -->
+          <div class="addr-field">
             <label for="cep">CEP</label>
             <input id="cep" placeholder="00000-000" />
           </div>
 
-          <div class="field">
+          <!-- Linha 2 -->
+          <div class="addr-field">
             <label for="rua">Rua / Logradouro</label>
             <input id="rua" placeholder="Rua, avenida..." />
           </div>
 
+          <!-- Linha 3: Número | Complemento | Bairro -->
           <div class="addr-row3">
-            <div class="field">
+            <div class="addr-field">
               <label for="numero">Número</label>
               <input id="numero" placeholder="Nº" />
             </div>
 
-            <div class="field">
+            <div class="addr-field">
               <label for="complemento">Complemento</label>
               <input id="complemento" placeholder="Apto, bloco..." />
             </div>
 
-            <div class="field">
+            <div class="addr-field">
               <label for="bairro">Bairro</label>
               <input id="bairro" />
             </div>
           </div>
 
+          <!-- Linha 4: Cidade | UF -->
           <div class="addr-row2">
-            <div class="field">
+            <div class="addr-field">
               <label for="cidade">Cidade</label>
               <input id="cidade" />
             </div>
 
-            <div class="field uf">
+            <div class="addr-field uf">
               <label for="uf">UF</label>
-              <select id="uf">…</select>
+              <select id="uf">
+                <option value="">UF</option>
+                <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option>
+                <option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option>
+                <option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option>
+                <option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option>
+                <option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+              </select>
             </div>
           </div>
         </div>
