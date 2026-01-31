@@ -290,9 +290,9 @@
 
       function typeLabel(t) {
         if (t === "primeira_consulta") return "Primeira consulta";
-        if (t === "evolução") return "Evolução";
-        if (t === "intercorrencia") return "Intercorrência";
-        return "Atendimento";
+        if (t === "evolucao" || t === "retorno" || t === "evolução") return "Evolução";
+        if (t === "intercorrencia" || t === "intercorrência") return "Intercorrência";
+        return "Evolução";
       }
       
       function monthYearLabelBR(ddmmyyyy) {
