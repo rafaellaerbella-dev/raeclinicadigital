@@ -109,6 +109,17 @@
       body{ margin: 16px; }
       .form-grid{ grid-template-columns: 1fr; }
     }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      background: #fff;
+    }
   </style>
 </head>
 
@@ -163,7 +174,7 @@
       <div>
         <label for="cep">CEP</label>
         <input id="cep" placeholder="00000-000" />
-        <div class="muted">Ao digitar o CEP, tentaremos preencher rua/bairro/cidade/UF.</div>
+        <div class="muted">Preenchimento automático</div>
       </div>
 
       <div class="full">
@@ -192,8 +203,37 @@
       </div>
 
       <div>
-        <label for="uf">Estado (UF)</label>
-        <input id="uf" maxlength="2" placeholder="SP" />
+        <label for="uf">Estado</label>
+        <select id="uf">
+          <option value="">UF</option>
+          <option value="AC">AC</option>
+          <option value="AL">AL</option>
+          <option value="AP">AP</option>
+          <option value="AM">AM</option>
+          <option value="BA">BA</option>
+          <option value="CE">CE</option>
+          <option value="DF">DF</option>
+          <option value="ES">ES</option>
+          <option value="GO">GO</option>
+          <option value="MA">MA</option>
+          <option value="MT">MT</option>
+          <option value="MS">MS</option>
+          <option value="MG">MG</option>
+          <option value="PA">PA</option>
+          <option value="PB">PB</option>
+          <option value="PR">PR</option>
+          <option value="PE">PE</option>
+          <option value="PI">PI</option>
+          <option value="RJ">RJ</option>
+          <option value="RN">RN</option>
+          <option value="RS">RS</option>
+          <option value="RO">RO</option>
+          <option value="RR">RR</option>
+          <option value="SC">SC</option>
+          <option value="SP">SP</option>
+          <option value="SE">SE</option>
+          <option value="TO">TO</option>
+        </select>
       </div>
 
       <!-- Emergência -->
@@ -235,9 +275,7 @@
     const qs = (k) => new URLSearchParams(location.search).get(k);
 
     // ===== Helpers =====
-    function onlyDigits(s) {
-      return (s || "").replace(/\D/g, "");
-    }
+    const onlyDigits = (s) => (s || "").replace(/\D/g, "");
 
     function showError(msg) {
       const e = document.getElementById("error");
@@ -282,6 +320,35 @@
       if ((el.value || "").trim() === "") el.value = v || "";
     }
 
+    // ===== Elementos =====
+    const titleEl = document.getElementById("title");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+
+    // campos
+    const nomeEl = document.getElementById("nome");
+    const cpfEl = document.getElementById("cpf");
+    const nascEl = document.getElementById("nascimento");
+    const telEl = document.getElementById("telefone");
+    const emailEl = document.getElementById("email");
+
+    const cnsEl = document.getElementById("cns");
+    const nomeMaeEl = document.getElementById("nomeMae");
+
+    const cepEl = document.getElementById("cep");
+    const ruaEl = document.getElementById("rua");
+    const numeroEl = document.getElementById("numero");
+    const complementoEl = document.getElementById("complemento");
+    const bairroEl = document.getElementById("bairro");
+    const cidadeEl = document.getElementById("cidade");
+    const ufEl = document.getElementById("uf"); // select
+
+    const emergNomeEl = document.getElementById("emergNome");
+    const emergTelefoneEl = document.getElementById("emergTelefone");
+    const emergRelacaoEl = document.getElementById("emergRelacao");
+
+    const obsEl = document.getElementById("obs");
+
     // ===== ViaCEP =====
     let cepTimer = null;
 
@@ -289,27 +356,26 @@
       try {
         const resp = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
         if (!resp.ok) return;
-
         const data = await resp.json();
         if (data.erro) return;
 
+        // só preenche se estiver vazio (não sobrescreve)
         setIfEmpty("rua", data.logradouro);
         setIfEmpty("bairro", data.bairro);
         setIfEmpty("cidade", data.localidade);
-        setIfEmpty("uf", data.uf);
+
+        // UF como select — pode preencher sempre, porque é seguro
+        if (ufEl && data.uf) ufEl.value = data.uf;
       } catch {
         // silencioso
       }
     }
 
-    function attachCepListener() {
-      const cepEl = document.getElementById("cep");
-      if (!cepEl) return;
-
+    if (cepEl) {
       cepEl.addEventListener("input", () => {
         const digits = onlyDigits(cepEl.value);
 
-        // formata 00000-000
+        // formata 00000-000 sem atrapalhar
         cepEl.value = digits.length > 5
           ? `${digits.slice(0, 5)}-${digits.slice(5, 8)}`
           : digits;
@@ -321,12 +387,11 @@
       });
     }
 
-    // ===== Carregar paciente para edição =====
+    // ===== Carregar edição =====
     const patients = loadPatients();
     const id = qs("id");
     const editing = id ? patients.find(p => p.id === id) : null;
 
-    const titleEl = document.getElementById("title");
     if (titleEl) titleEl.textContent = editing ? "Editar paciente" : "Novo paciente";
 
     if (editing) {
@@ -342,13 +407,16 @@
       setVal("nomeMae", editing.nomeMae || "");
 
       const addr = editing.endereco_obj || {};
-      setVal("cep", addr.cep ? (addr.cep.length === 8 ? `${addr.cep.slice(0,5)}-${addr.cep.slice(5)}` : addr.cep) : "");
+      if (cepEl) {
+        const c = (addr.cep || "");
+        cepEl.value = c && c.length === 8 ? `${c.slice(0, 5)}-${c.slice(5)}` : c;
+      }
       setVal("rua", addr.rua || "");
       setVal("numero", addr.numero || "");
       setVal("complemento", addr.complemento || "");
       setVal("bairro", addr.bairro || "");
       setVal("cidade", addr.cidade || "");
-      setVal("uf", (addr.uf || "").toUpperCase());
+      if (ufEl) ufEl.value = (addr.uf || "");
 
       const em = editing.emergencia || {};
       setVal("emergNome", em.nome || "");
@@ -358,14 +426,11 @@
       setVal("obs", editing.obs || "");
     }
 
-    // ativa CEP
-    attachCepListener();
-
     // ===== Salvar =====
-    document.getElementById("saveBtn")?.addEventListener("click", () => {
+    saveBtn?.addEventListener("click", () => {
       clearError();
 
-      const nome = getVal("nome");
+      const nome = (nomeEl?.value || "").trim();
       if (!nome) {
         showError("Nome é obrigatório.");
         return;
@@ -374,31 +439,31 @@
       const obj = {
         id: editing?.id || uid(),
         nome,
-        cpf: onlyDigits(getVal("cpf")),
-        nascimento: getVal("nascimento"),
-        telefone: onlyDigits(getVal("telefone")),
-        email: getVal("email"),
+        cpf: onlyDigits(cpfEl?.value),
+        nascimento: (nascEl?.value || "").trim(),
+        telefone: onlyDigits(telEl?.value),
+        email: (emailEl?.value || "").trim(),
 
-        cns: onlyDigits(getVal("cns")),
-        nomeMae: getVal("nomeMae"),
+        cns: onlyDigits(cnsEl?.value),
+        nomeMae: (nomeMaeEl?.value || "").trim(),
 
         endereco_obj: {
-          cep: onlyDigits(getVal("cep")),
-          rua: getVal("rua"),
-          numero: getVal("numero"),
-          complemento: getVal("complemento"),
-          bairro: getVal("bairro"),
-          cidade: getVal("cidade"),
-          uf: getVal("uf").toUpperCase()
+          cep: onlyDigits(cepEl?.value),
+          rua: (ruaEl?.value || "").trim(),
+          numero: (numeroEl?.value || "").trim(),
+          complemento: (complementoEl?.value || "").trim(),
+          bairro: (bairroEl?.value || "").trim(),
+          cidade: (cidadeEl?.value || "").trim(),
+          uf: (ufEl?.value || "").trim().toUpperCase()
         },
 
         emergencia: {
-          nome: getVal("emergNome"),
-          telefone: onlyDigits(getVal("emergTelefone")),
-          relacao: getVal("emergRelacao")
+          nome: (emergNomeEl?.value || "").trim(),
+          telefone: onlyDigits(emergTelefoneEl?.value),
+          relacao: (emergRelacaoEl?.value || "").trim()
         },
 
-        obs: getVal("obs"),
+        obs: (obsEl?.value || "").trim(),
         updatedAt: new Date().toISOString()
       };
 
@@ -409,12 +474,12 @@
 
       savePatients(patients);
 
-      // volta para a ficha
+      // volta para ficha do paciente
       window.location.href = `/paciente.html?id=${encodeURIComponent(obj.id)}`;
     });
 
     // ===== Cancelar =====
-    document.getElementById("cancelBtn")?.addEventListener("click", () => {
+    cancelBtn?.addEventListener("click", () => {
       if (editing) {
         window.location.href = `/paciente.html?id=${encodeURIComponent(editing.id)}`;
       } else {
