@@ -126,84 +126,67 @@
       .addr3{ grid-template-columns: 1fr; }
     }
 
-    /* ===== FIELDSET ENDEREÇO ===== */
-    .fieldset {
-      width: 100%;
-      border: 1px solid #eee;
-      border-radius: 16px;
-      padding: 24px;
-    }
-
-    /* título do fieldset */
-    .fieldset legend {
-      padding: 0 10px;
-      font-weight: 700;
-      font-size: 18px;
-    }
-
-    /* grid base */
-    .address-grid {
+    /* Grid específico do endereço (independente do resto do form) */
+    .address-grid{
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 14px;
       width: 100%;
+      margin-top: 12px;
     }
 
-    /* linhas que ocupam tudo */
-    .address-grid .full {
+    /* Campos padrão */
+    .address-grid .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    /* Linhas inteiras */
+    .address-grid .full{
       grid-column: 1 / -1;
     }
 
-    /* linha número + complemento */
-    .address-grid .two {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+    /* ===== Linha de 3 (bairro / cidade / uf) ===== */
+    .address-grid .bairro{
+      grid-column: 1 / 2;
     }
 
-    /* linha bairro + cidade + UF */
-    .address-grid .three {
-      display: grid;
-      grid-template-columns: 2fr 2fr 90px;
-      gap: 16px;
+    .address-grid .cidade{
+      grid-column: 2 / 3;
+    }
+
+    .address-grid .uf{
+      grid-column: 3 / 4;
+    }
+
+    /* Cria a 3ª coluna APENAS quando precisar */
+    .address-grid{
+      grid-auto-flow: row;
+    }
+
+    /* Força 3 colunas quando existir UF */
+    .address-grid:has(.uf){
+      grid-template-columns: 1fr 1fr 90px;
+    }
+
+    /* UF compacto, mas alinhado */
+    .address-grid .uf select{
       width: 100%;
+      min-width: 0;
     }
 
-    /* wrapper de cada campo */
-    .address-grid .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    /* Mobile: tudo vira 1 coluna */
+    @media (max-width: 720px){
+      .address-grid{
+        grid-template-columns: 1fr;
+      }
 
-    /* inputs e selects iguais */
-    .address-grid input,
-    .address-grid select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      font-size: 14px;
-      background: #fff;
-    }
-
-    /* remove borda preta do select */
-    .address-grid select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-
-      background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 16px;
-    }
-
-    /* foco clean */
-    .address-grid input:focus,
-    .address-grid select:focus {
-      outline: none;
-      border-color: #bbb;
+      .address-grid .bairro,
+      .address-grid .cidade,
+      .address-grid .uf{
+        grid-column: 1 / -1;
+      }
     }
   </style>
 </head>
