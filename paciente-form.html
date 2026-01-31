@@ -175,6 +175,46 @@
   .address-grid .field.uf{
     grid-column: 3 / 4 !important;
   }
+
+  /* Endereço com linhas explícitas (não depende do grid pai) */
+  .addr-wrap{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .addr-wrap .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  /* linha 3: número | complemento | bairro */
+  .addr-row3{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:14px;
+  }
+
+  /* linha 4: cidade | UF pequeno */
+  .addr-row2{
+    display:grid;
+    grid-template-columns: 1fr 90px;
+    gap:14px;
+    align-items:end;
+  }
+
+  .addr-row2 .uf select{
+    width:100%;
+  }
+
+  /* mobile: empilha */
+  @media (max-width: 720px){
+    .addr-row3{ grid-template-columns: 1fr; }
+    .addr-row2{ grid-template-columns: 1fr; }
+  }
   </style>
 </head>
 
@@ -229,49 +269,53 @@
       <fieldset class="fieldset">
         <legend>Endereço</legend>
 
-        <div class="address-grid">
-          <div class="field full">
+        <div class="addr-wrap">
+          <div class="field">
             <label for="cep">CEP</label>
-            <input id="cep" />
+            <input id="cep" placeholder="00000-000" />
           </div>
 
-          <div class="field full">
+          <div class="field">
             <label for="rua">Rua / Logradouro</label>
-            <input id="rua" />
+            <input id="rua" placeholder="Rua, avenida..." />
           </div>
 
-          <div class="field numero">
-            <label for="numero">Número</label>
-            <input id="numero" />
+          <div class="addr-row3">
+            <div class="field">
+              <label for="numero">Número</label>
+              <input id="numero" placeholder="Nº" />
+            </div>
+
+            <div class="field">
+              <label for="complemento">Complemento</label>
+              <input id="complemento" placeholder="Apto, bloco..." />
+            </div>
+
+            <div class="field">
+              <label for="bairro">Bairro</label>
+              <input id="bairro" />
+            </div>
           </div>
 
-          <div class="field complemento">
-            <label for="complemento">Complemento</label>
-            <input id="complemento" />
-          </div>
+          <div class="addr-row2">
+            <div class="field">
+              <label for="cidade">Cidade</label>
+              <input id="cidade" />
+            </div>
 
-          <div class="field bairro">
-            <label for="bairro">Bairro</label>
-            <input id="bairro" />
-          </div>
-
-          <div class="field cidade">
-            <label for="cidade">Cidade</label>
-            <input id="cidade" />
-          </div>
-
-          <div class="field uf">
-            <label for="uf">UF</label>
-            <select id="uf">
-              <option value="">UF</option>
-              <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option>
-              <option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option>
-              <option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
-              <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option>
-              <option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option>
-              <option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
-              <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
-            </select>
+            <div class="field uf">
+              <label for="uf">UF</label>
+              <select id="uf">
+                <option value="">UF</option>
+                <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option>
+                <option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option>
+                <option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option>
+                <option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option>
+                <option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+              </select>
+            </div>
           </div>
         </div>
       </fieldset>
