@@ -134,11 +134,11 @@
 
    /* ===== ENDEREÇO ===== */
   .address-grid{
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr; /* base: 3 colunas */
-    gap: 14px;
-    width: 100%;
-    margin-top: 12px;
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:14px;
+    width:100%;
+    margin-top:12px;
   }
 
   .address-grid .field{
@@ -148,26 +148,18 @@
     min-width:0;
   }
 
-  /* Linhas inteiras */
-  .address-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .address-grid .full{ grid-column: 1 / -1; }
 
-  .address-grid .full { grid-column: 1 / -1; }
+  .address-grid .numero{ grid-column: 1 / 2; }
+  .address-grid .complemento{ grid-column: 2 / 3; }
+  .address-grid .bairro{ grid-column: 3 / 4; }
 
-  .address-grid .numero { grid-column: 1 / 2; }
-  .address-grid .complemento { grid-column: 2 / 3; }
-  .address-grid .bairro { grid-column: 3 / 4; }
-  .address-grid .cidade { grid-column: 1 / 3; }
-  .address-grid .uf { grid-column: 3 / 4; }
+  .address-grid .cidade{ grid-column: 1 / 3; }
+  .address-grid .uf{ grid-column: 3 / 4; }
 
-  /* ===== Mobile ===== */
   @media (max-width: 720px){
-    .address-grid{
-      grid-template-columns: 1fr;
-    }
-
-    .address-grid .field{
-      grid-column: 1 / -1 !important;
-    }
+    .address-grid{ grid-template-columns: 1fr; }
+    .address-grid .field{ grid-column: 1 / -1 !important; }
   }
   </style>
 </head>
