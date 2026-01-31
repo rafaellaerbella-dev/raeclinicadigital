@@ -84,6 +84,8 @@
     <h1>Arquivos</h1>
     <div class="muted" id="subtitle"></div>
 
+    <div class="muted" id="pacienteLabel"></div>
+
     <div id="error"></div>
 
     <div class="card">
@@ -189,6 +191,25 @@
 
         listEl.appendChild(div);
       });
+    }
+
+    const pacienteLabelEl = document.getElementById("pacienteLabel");
+
+    const pacienteId = new URLSearchParams(location.search).get("pacienteId");
+
+    function loadPatients() {
+      try {
+        return JSON.parse(localStorage.getItem("rae_patients_v1") || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    const patients = loadPatients();
+    const paciente = patients.find(p => p.id === pacienteId);
+
+    if (pacienteLabelEl && paciente) {
+      pacienteLabelEl.innerHTML = `<strong>Paciente:</strong> ${paciente.nome}`;
     }
 
     uploadBtn.addEventListener("click", async () => {
