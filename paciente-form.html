@@ -161,6 +161,20 @@
     .address-grid{ grid-template-columns: 1fr; }
     .address-grid .field{ grid-column: 1 / -1 !important; }
   }
+
+  /* força a grade do endereço */
+  .address-grid{
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+
+  /* força as posições da última linha */
+  .address-grid .field.cidade{
+    grid-column: 1 / 3 !important;
+  }
+
+  .address-grid .field.uf{
+    grid-column: 3 / 4 !important;
+  }
   </style>
 </head>
 
