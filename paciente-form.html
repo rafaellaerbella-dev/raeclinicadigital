@@ -149,36 +149,16 @@
   }
 
   /* Linhas inteiras */
-  .address-grid .full{
-    grid-column: 1 / -1;
-  }
+  .address-grid { grid-template-columns: 1fr 1fr 1fr; }
 
-  /* Linha 3: número | complemento | bairro */
-  .address-grid .numero{
-    grid-column: 1 / 2;
-  }
+.address-grid .full { grid-column: 1 / -1; }
 
-  .address-grid .complemento{
-    grid-column: 2 / 3;
-  }
+.address-grid .numero { grid-column: 1 / 2; }
+.address-grid .complemento { grid-column: 2 / 3; }
+.address-grid .bairro { grid-column: 3 / 4; }
 
-  .address-grid .bairro{
-    grid-column: 3 / 4;
-  }
-
-  /* Linha 4: cidade | UF */
-  .address-grid .cidade{
-    grid-column: 1 / 3; /* ocupa duas colunas */
-  }
-
-  .address-grid .uf{
-    grid-column: 3 / 4;
-  }
-
-  /* UF compacto */
-  .address-grid .uf select{
-    width:100%;
-  }
+.address-grid .cidade { grid-column: 1 / 3; }
+.address-grid .uf { grid-column: 3 / 4; }
 
   /* ===== Mobile ===== */
   @media (max-width: 720px){
@@ -255,22 +235,22 @@
             <input id="rua" placeholder="Rua, avenida..." />
           </div>
 
-          <div class="field">
+          <div class="field numero">
             <label for="numero">Número</label>
             <input id="numero" placeholder="Nº" />
           </div>
 
-          <div class="field">
+          <div class="field complemento">
             <label for="complemento">Complemento</label>
             <input id="complemento" placeholder="Apto, bloco..." />
           </div>
 
-          <div class="field">
+          <div class="field bairro">
             <label for="bairro">Bairro</label>
             <input id="bairro" />
           </div>
 
-          <div class="field">
+          <div class="field cidade">
             <label for="cidade">Cidade</label>
             <input id="cidade" />
           </div>
