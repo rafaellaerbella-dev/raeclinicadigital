@@ -176,6 +176,51 @@
       grid-column: 1 / -1 !important;
     }
   }
+
+  /* ===== AJUSTES FINAIS DE PROPORÇÃO ===== */
+
+/* CEP menor */
+#cep{
+  max-width: 260px;
+}
+
+/* Linha Número / Complemento / Bairro */
+.addr-row3{
+  display: grid;
+  grid-template-columns: 160px 1fr 1fr;
+  gap: 14px;
+}
+
+  /* Linha Cidade / UF */
+  .addr-row2{
+    display: grid;
+    grid-template-columns: 1fr 90px;
+    gap: 14px;
+    align-items: end;
+  }
+
+  /* Cidade não ocupa tudo visualmente */
+  #cidade{
+    max-width: 520px;
+  }
+
+  /* UF compacto e alinhado */
+  .addr-field.uf select{
+    min-width: 0;
+  }
+
+  /* Mobile continua empilhando */
+  @media (max-width: 720px){
+    #cep,
+    #cidade{
+      max-width: 100%;
+    }
+
+    .addr-row3,
+    .addr-row2{
+      grid-template-columns: 1fr;
+    }
+  }
   </style>
 
 </head>
