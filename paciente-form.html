@@ -39,21 +39,6 @@
       background:#fff;
     }
 
-    /* Fieldset (Endereço) */
-    .fieldset{
-      width: 100%;
-      border:1px solid #eee;
-      border-radius:12px;
-      padding:14px 16px 16px;
-      margin-top:16px;
-      background:#fff;
-    }
-    .fieldset legend{
-      padding:0 8px;
-      font-weight:700;
-      color:#333;
-    }
-
     /* Form */
     label{
       font-weight:600;
@@ -114,27 +99,6 @@
       grid-column: 1 / -1;
     }
 
-    /* Linha: Bairro + Cidade + UF */
-    .addr3{
-      grid-column: 1 / -1;
-      display:grid;
-      grid-template-columns: 2fr 2fr 90px;
-      gap: 14px;
-      align-items: end;
-      width: 100%;
-    }
-
-    .addr3 > div{
-      display:flex;
-      flex-direction:column;
-      gap: 6px;
-    }
-
-    .addr3 select {
-      width: 100%;
-      min-width: 0;
-    }
-
     /* Botões */
     .actions{
       display:flex;
@@ -160,6 +124,86 @@
       body{ margin: 16px; }
       .form-grid{ grid-template-columns: 1fr; }
       .addr3{ grid-template-columns: 1fr; }
+    }
+
+    /* ===== FIELDSET ENDEREÇO ===== */
+    .fieldset {
+      width: 100%;
+      border: 1px solid #eee;
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    /* título do fieldset */
+    .fieldset legend {
+      padding: 0 10px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    /* grid base */
+    .address-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+    }
+
+    /* linhas que ocupam tudo */
+    .address-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    /* linha número + complemento */
+    .address-grid .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* linha bairro + cidade + UF */
+    .address-grid .three {
+      display: grid;
+      grid-template-columns: 2fr 2fr 90px;
+      gap: 16px;
+      width: 100%;
+    }
+
+    /* wrapper de cada campo */
+    .address-grid .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* inputs e selects iguais */
+    .address-grid input,
+    .address-grid select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    /* remove borda preta do select */
+    .address-grid select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+
+      background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px;
+    }
+
+    /* foco clean */
+    .address-grid input:focus,
+    .address-grid select:focus {
+      outline: none;
+      border-color: #bbb;
     }
   </style>
 </head>
