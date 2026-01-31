@@ -4,31 +4,110 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Novo paciente • RAE Clínica Digital</title>
+  
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; max-width: 720px; }
-    label { display:block; margin-top: 12px; font-weight: bold; }
-    input { width: 100%; padding: 10px; margin-top: 6px; }
-    .row { display:flex; gap: 12px; }
-    .row > div { flex: 1; }
-    button { margin-top: 16px; padding: 10px 12px; cursor:pointer; }
-    .muted { color:#666; font-size: 13px; }
-    #danger { background:#ffebee; border:1px solid #ef5350; color:#c62828; padding:10px; border-radius:8px; margin-top:12px; display:none; }
+    * { box-sizing: border-box; }
+
+    body{
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      max-width: 980px;
+    }
+
+    a{ color:#0b66c3; text-decoration:none; }
+
+    h1{ margin: 0 0 10px 0; }
+
+    .card{
+      border:1px solid #eee;
+      padding:16px;
+      border-radius:12px;
+      margin-top:16px;
+      background:#fff;
+    }
+
+    .muted{ color:#666; font-size:13px; }
+
+    #error{
+      display:none;
+      background:#ffebee;
+      border:1px solid #ef5350;
+      color:#c62828;
+      padding:12px;
+      border-radius:12px;
+      margin-top:12px;
+      white-space:pre-wrap;
+    }
+
+    label{
+      font-weight:600;
+      font-size:13px;
+      color:#222;
+    }
+
+    input, textarea{
+      width:100%;
+      padding:10px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      font-family:inherit;
+      font-size:14px;
+      background:#fff;
+    }
+
+    textarea{
+      min-height:120px;
+      resize:vertical;
+    }
 
     .form-grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 14px;
       margin-top: 12px;
     }
 
-    .form-grid .full{
+    .form-grid > div{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+
+    .full{
       grid-column: 1 / -1;
     }
 
+    .section-title{
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #f0f0f0;
+      font-weight:700;
+      color:#333;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    button{
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid #ddd;
+      background:#fff;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#f7f7f7;
+    }
+
     @media (max-width: 720px){
-      .form-grid{
-        grid-template-columns: 1fr;
-      }
+      body{ margin: 16px; }
+      .form-grid{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -87,11 +166,6 @@
         <div class="muted">Ao digitar o CEP, tentaremos preencher rua/bairro/cidade/UF.</div>
       </div>
 
-      <div>
-        <label for="uf">Estado (UF)</label>
-        <input id="uf" maxlength="2" placeholder="SP" />
-      </div>
-
       <div class="full">
         <label for="rua">Rua / Logradouro</label>
         <input id="rua" placeholder="Rua, avenida..." />
@@ -115,6 +189,11 @@
       <div>
         <label for="cidade">Cidade</label>
         <input id="cidade" />
+      </div>
+
+      <div>
+        <label for="uf">Estado (UF)</label>
+        <input id="uf" maxlength="2" placeholder="SP" />
       </div>
 
       <!-- Emergência -->
@@ -149,97 +228,64 @@
       <button id="cancelBtn" type="button">Cancelar</button>
     </div>
   </div>
-</form>
 
   <script>
+    // ===== Config =====
     const KEY = "rae_patients_v1";
+    const qs = (k) => new URLSearchParams(location.search).get(k);
+
+    // ===== Helpers =====
+    function onlyDigits(s) {
+      return (s || "").replace(/\D/g, "");
+    }
+
+    function showError(msg) {
+      const e = document.getElementById("error");
+      if (!e) return;
+      e.style.display = "block";
+      e.textContent = msg;
+    }
+
+    function clearError() {
+      const e = document.getElementById("error");
+      if (!e) return;
+      e.style.display = "none";
+      e.textContent = "";
+    }
 
     function loadPatients() {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return [];
-      try { return JSON.parse(raw) || []; } catch { return []; }
+      try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+      catch { return []; }
     }
 
-    function savePatients(patients) {
-      localStorage.setItem(KEY, JSON.stringify(patients));
-    }
-
-    function getId() {
-      return new URLSearchParams(location.search).get("id");
+    function savePatients(list) {
+      localStorage.setItem(KEY, JSON.stringify(list));
     }
 
     function uid() {
       return "p_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
     }
 
-    function showError(msg) {
-      const d = document.getElementById("danger");
-      d.style.display = "block";
-      d.textContent = msg;
-    }
-
-    function clearError() {
-      const d = document.getElementById("danger");
-      d.style.display = "none";
-      d.textContent = "";
-    }
-
-    const id = getId();
-    const patients = loadPatients();
-    const existing = id ? patients.find(p => p.id === id) : null;
-
-    if (existing) {
-      document.getElementById("title").textContent = "Editar paciente";
-      document.getElementById("nome").value = existing.nome || "";
-      document.getElementById("cpf").value = existing.cpf || "";
-      document.getElementById("nascimento").value = existing.nascimento || "";
-      document.getElementById("telefone").value = existing.telefone || "";
-      document.getElementById("email").value = existing.email || "";
-      document.getElementById("endereco").value = existing.endereco || "";
-    }
-
-    document.getElementById("form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      clearError();
-
-      const nome = document.getElementById("nome").value.trim();
-      if (!nome) return showError("Nome é obrigatório.");
-
-      const cpf = document.getElementById("cpf").value.trim();
-      const cpfDigits = cpf.replace(/\D/g, "");
-      if (cpfDigits && cpfDigits.length !== 11) return showError("CPF precisa ter 11 dígitos (ou ficar vazio).");
-
-      const p = {
-        id: existing?.id || uid(),
-        nome,
-        cpf: cpfDigits || "",
-        nascimento: document.getElementById("nascimento").value.trim(),
-        telefone: document.getElementById("telefone").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        endereco: document.getElementById("endereco").value.trim(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const next = patients.filter(x => x.id !== p.id);
-      next.push(p);
-      savePatients(next);
-
-      window.location.href = "/pacientes.html";
-    });
-
-    function onlyDigits(s) {
-      return (s || "").replace(/\D/g, "");
-    }
-
-    function setValue(id, value) {
+    function setVal(id, v) {
       const el = document.getElementById(id);
-      if (el && (el.value || "") === "") el.value = value || "";
+      if (el) el.value = v ?? "";
     }
 
-    // debounce simples para não chamar toda hora
+    function getVal(id) {
+      const el = document.getElementById(id);
+      return (el?.value || "").trim();
+    }
+
+    function setIfEmpty(id, v) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if ((el.value || "").trim() === "") el.value = v || "";
+    }
+
+    // ===== ViaCEP =====
     let cepTimer = null;
 
-    async function buscarCepEPreencher(cepDigits) {
+    async function preencherPorCEP(cepDigits) {
       try {
         const resp = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
         if (!resp.ok) return;
@@ -247,29 +293,132 @@
         const data = await resp.json();
         if (data.erro) return;
 
-        // Só preenche se os campos estiverem vazios (não sobrescreve o que você já digitou)
-        setValue("rua", data.logradouro);
-        setValue("bairro", data.bairro);
-        setValue("cidade", data.localidade);
-        setValue("uf", data.uf);
+        setIfEmpty("rua", data.logradouro);
+        setIfEmpty("bairro", data.bairro);
+        setIfEmpty("cidade", data.localidade);
+        setIfEmpty("uf", data.uf);
       } catch {
-        // silencioso: se falhar, você preenche manualmente
+        // silencioso
       }
     }
 
-    document.getElementById("cep")?.addEventListener("input", (e) => {
-      const el = e.target;
-      const digits = onlyDigits(el.value);
+    function attachCepListener() {
+      const cepEl = document.getElementById("cep");
+      if (!cepEl) return;
 
-      // opcional: formatar como 00000-000 sem atrapalhar
-      if (digits.length <= 8) {
-        el.value = digits.length > 5 ? `${digits.slice(0,5)}-${digits.slice(5)}` : digits;
+      cepEl.addEventListener("input", () => {
+        const digits = onlyDigits(cepEl.value);
+
+        // formata 00000-000
+        cepEl.value = digits.length > 5
+          ? `${digits.slice(0, 5)}-${digits.slice(5, 8)}`
+          : digits;
+
+        clearTimeout(cepTimer);
+        if (digits.length === 8) {
+          cepTimer = setTimeout(() => preencherPorCEP(digits), 250);
+        }
+      });
+    }
+
+    // ===== Carregar paciente para edição =====
+    const patients = loadPatients();
+    const id = qs("id");
+    const editing = id ? patients.find(p => p.id === id) : null;
+
+    const titleEl = document.getElementById("title");
+    if (titleEl) titleEl.textContent = editing ? "Editar paciente" : "Novo paciente";
+
+    if (editing) {
+      clearError();
+
+      setVal("nome", editing.nome || "");
+      setVal("cpf", editing.cpf || "");
+      setVal("nascimento", editing.nascimento || "");
+      setVal("telefone", editing.telefone || "");
+      setVal("email", editing.email || "");
+
+      setVal("cns", editing.cns || "");
+      setVal("nomeMae", editing.nomeMae || "");
+
+      const addr = editing.endereco_obj || {};
+      setVal("cep", addr.cep ? (addr.cep.length === 8 ? `${addr.cep.slice(0,5)}-${addr.cep.slice(5)}` : addr.cep) : "");
+      setVal("rua", addr.rua || "");
+      setVal("numero", addr.numero || "");
+      setVal("complemento", addr.complemento || "");
+      setVal("bairro", addr.bairro || "");
+      setVal("cidade", addr.cidade || "");
+      setVal("uf", (addr.uf || "").toUpperCase());
+
+      const em = editing.emergencia || {};
+      setVal("emergNome", em.nome || "");
+      setVal("emergTelefone", em.telefone || "");
+      setVal("emergRelacao", em.relacao || "");
+
+      setVal("obs", editing.obs || "");
+    }
+
+    // ativa CEP
+    attachCepListener();
+
+    // ===== Salvar =====
+    document.getElementById("saveBtn")?.addEventListener("click", () => {
+      clearError();
+
+      const nome = getVal("nome");
+      if (!nome) {
+        showError("Nome é obrigatório.");
+        return;
       }
 
-      clearTimeout(cepTimer);
+      const obj = {
+        id: editing?.id || uid(),
+        nome,
+        cpf: onlyDigits(getVal("cpf")),
+        nascimento: getVal("nascimento"),
+        telefone: onlyDigits(getVal("telefone")),
+        email: getVal("email"),
 
-      if (digits.length === 8) {
-        cepTimer = setTimeout(() => buscarCepEPreencher(digits), 250);
+        cns: onlyDigits(getVal("cns")),
+        nomeMae: getVal("nomeMae"),
+
+        endereco_obj: {
+          cep: onlyDigits(getVal("cep")),
+          rua: getVal("rua"),
+          numero: getVal("numero"),
+          complemento: getVal("complemento"),
+          bairro: getVal("bairro"),
+          cidade: getVal("cidade"),
+          uf: getVal("uf").toUpperCase()
+        },
+
+        emergencia: {
+          nome: getVal("emergNome"),
+          telefone: onlyDigits(getVal("emergTelefone")),
+          relacao: getVal("emergRelacao")
+        },
+
+        obs: getVal("obs"),
+        updatedAt: new Date().toISOString()
+      };
+
+      // upsert
+      const idx = patients.findIndex(p => p.id === obj.id);
+      if (idx >= 0) patients[idx] = obj;
+      else patients.push(obj);
+
+      savePatients(patients);
+
+      // volta para a ficha
+      window.location.href = `/paciente.html?id=${encodeURIComponent(obj.id)}`;
+    });
+
+    // ===== Cancelar =====
+    document.getElementById("cancelBtn")?.addEventListener("click", () => {
+      if (editing) {
+        window.location.href = `/paciente.html?id=${encodeURIComponent(editing.id)}`;
+      } else {
+        window.location.href = "/pacientes.html";
       }
     });
   </script>
