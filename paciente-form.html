@@ -18,14 +18,6 @@
 
     h1{ margin: 0 0 10px 0; }
 
-    .card{
-      border:1px solid #eee;
-      padding:16px;
-      border-radius:12px;
-      margin-top:16px;
-      background:#fff;
-    }
-
     .muted{ color:#666; font-size:13px; }
 
     #error{
@@ -39,13 +31,36 @@
       white-space:pre-wrap;
     }
 
+    .card{
+      border:1px solid #eee;
+      padding:16px;
+      border-radius:12px;
+      margin-top:16px;
+      background:#fff;
+    }
+
+    /* Fieldset (Endereço) */
+    .fieldset{
+      border:1px solid #eee;
+      border-radius:12px;
+      padding:14px 16px 16px;
+      margin-top:16px;
+      background:#fff;
+    }
+    .fieldset legend{
+      padding:0 8px;
+      font-weight:700;
+      color:#333;
+    }
+
+    /* Form */
     label{
       font-weight:600;
       font-size:13px;
       color:#222;
     }
 
-    input, textarea{
+    input, textarea, select{
       width:100%;
       padding:10px;
       border:1px solid #ddd;
@@ -60,6 +75,24 @@
       resize:vertical;
     }
 
+    /* Select = igual aos inputs */
+    select{
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+
+      background-image:url("data:image/svg+xml;utf8,<svg fill='%23666' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat:no-repeat;
+      background-position:right 10px center;
+      background-size:16px;
+    }
+
+    input:focus, textarea:focus, select:focus{
+      outline:none;
+      border-color:#bbb;
+    }
+
+    /* Grid geral */
     .form-grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -77,15 +110,22 @@
       grid-column: 1 / -1;
     }
 
-    .section-title{
+    /* Linha: Bairro + Cidade + UF */
+    .addr3{
       grid-column: 1 / -1;
-      margin-top: 8px;
-      padding-top: 10px;
-      border-top: 1px solid #f0f0f0;
-      font-weight:700;
-      color:#333;
+      display:grid;
+      grid-template-columns: 1fr 1fr 90px;
+      gap: 14px;
+      align-items: end;
     }
 
+    .addr3 > div{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+
+    /* Botões */
     .actions{
       display:flex;
       gap:10px;
@@ -105,56 +145,12 @@
       background:#f7f7f7;
     }
 
+    /* Responsivo */
     @media (max-width: 720px){
       body{ margin: 16px; }
       .form-grid{ grid-template-columns: 1fr; }
-    }
-
-    .form-grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 12px;
-    }
-
-    .full{ grid-column: 1 / -1; }
-
-    /* 4ª linha: bairro + cidade + UF */
-    .addr3{
-      grid-column: 1 / -1;
-      display:grid;
-      grid-template-columns: 1fr 1fr 90px;
-      gap: 14px;
-      align-items: end;
-    }
-
-    @media (max-width: 720px){
-      .form-grid{ grid-template-columns: 1fr; }
       .addr3{ grid-template-columns: 1fr; }
     }
-
-    select{
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      background: #fff;
-      font: inherit;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-
-      background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 16px;
-    }
-
-    /* quando seleciona/foca */
-    select:focus{
-      outline: none;
-      border-color: #bbb;
-    }
-
   </style>
 </head>
 
